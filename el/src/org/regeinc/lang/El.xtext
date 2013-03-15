@@ -1,0 +1,215 @@
+grammar org.regeinc.lang.El with org.eclipse.xtext.common.Terminals
+
+generate el "http://www.regeinc.org/lang/El"
+
+Model:
+	allElement+=Element*;
+
+Element:
+	pkg=Package
+	allImport+=Import*
+	allType+=Type+;
+
+Package:
+	'package' name=QualifiedName ';';
+
+Import:
+	'import' importedNamespace=QualifiedNameWithWildCard ';';
+
+QualifiedNameWithWildCard:
+	QualifiedName '.*'?;
+
+QualifiedName:
+	ID (=> '.' ID)*;
+
+enum Visibility:
+	PUBLIC='public' | PRIVATE='private' | PROTECTED='protected';
+
+Type:
+	Contract | Entity;
+
+Contract:
+	visibility=Visibility? 'interface' name=ID (EXTENDS?='extends' type=[Contract|QualifiedName])?
+	'{'
+	(allMethodDeclaration+=MethodDeclaration ';')*
+	'}';
+
+Entity:
+	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID (EXTENDS?='extends'
+	type=[Type|QualifiedName])?
+	(IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (',' allContract+=[Contract|QualifiedName])*)?
+	'{'
+	(allAssociation+=Association
+	| allState+=State
+	| allMethodDefinition+=MethodDefinition)*
+	'}';
+
+State:
+	'state' name=ID constraint=Constraint? ';';
+
+Association:
+	visibility=Visibility? IDENTITY?='identity'?
+	specificTypeRef=SpecificTypeRef (constraint=Constraint | (INITIALIZED?='=' instance=Instance))? ';';
+
+MethodDeclaration:
+	returnType=[Type|QualifiedName]? name=ID '(' (parameter=Parameter)? ')';
+
+Parameter:
+	specificTypeRef=SpecificTypeRef (list?=',' next=Parameter)?;
+
+SpecificTypeRef:
+	orTypePrefix=OrTypePrefix? typeRef=TypeRef;
+
+TypeRef:
+	FINAL?='final'? NOTNULL?='notnull'? type=[Type|QualifiedName] name=ID;
+
+OrTypePrefix:
+	andTypePrefix=AndTypePrefix ('||' orTypePrefix=OrTypePrefix)?;
+
+AndTypePrefix:
+	notTypePrefix=NotTypePrefix ('&&' andTypePrefix=AndTypePrefix)?;
+
+NotTypePrefix:
+	NOT?='!'? typePrefix=TypePrefix;
+
+TypePrefix:
+	type=[Type|QualifiedName]
+	| '(' orTypePrefix=OrTypePrefix ')';
+
+MethodDefinition:
+	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')?
+	methodDeclaration=MethodDeclaration (UNDEFINED?=';' | (constraint=Constraint? methodBody=MethodBody));
+
+Constraint:
+	'onlyif' orCondition=OrCondition;
+
+OrCondition:
+	andCondition=AndCondition ('||' orCondition=OrCondition)?;
+
+AndCondition:
+	notCondition=NotCondition ('&&' andCondition=AndCondition)?;
+
+NotCondition:
+	NOT?='!'? condition=Condition;
+
+Condition:
+	instance=Instance // only boolean
+	| groupCondition=GroupCondition;
+
+GroupCondition:
+	'(' orCondition=OrCondition ')';
+
+MethodBody:
+	{MethodBody}
+	'{'
+	allStatement+=Statement*
+	'}';
+
+Statement:
+	blockStatement=BlockStatement
+	| lineStatement=LineStatement;
+
+BlockStatement:
+	ifBlock=If
+	| whileBlock=While
+	| guardBlock=Guard;
+
+If:
+	'if' orCondition=OrCondition methodBody=MethodBody elseBlock=Else?;
+
+Else:
+	'else' (ifCondition=If | methodBody=MethodBody);
+
+While:
+	'while' orCondition=OrCondition methodBody=MethodBody;
+
+Guard:
+	typeRef=[TypeRef] 'guarded' allEntity+=[Entity|QualifiedName] (',' allEntity+=[Entity|QualifiedName])*
+	methodBody=MethodBody;
+
+LineStatement:
+	(doWhere=DoWhere
+	| (LETEXPRESSION?='let' localVariableBinding=LocalVariableBinding 'in' doWhere=DoWhere)) ';';
+
+LocalVariableBinding:
+	localVariableDeclaration=LocalVariableDeclaration (list?=',' next=LocalVariableBinding)?;
+
+LocalVariableDeclaration:
+	specificTypeRef=SpecificTypeRef '=' instance=Instance;
+
+DoWhere:
+	doIf=DoIf (CONTEXTUAL?='where' where=Where)?;
+
+Where:
+	clause=Clause (NESTED?='and' where=Where)?;
+
+Clause:
+	(=> typeRef=TypeRef 'from' instance=Instance) // only list instance
+	| orCondition=OrCondition;
+
+DoIf:
+	instruction=Instruction (CONDITIONAL?='provided' provided=Provided)?;
+
+Provided:
+	orCondition=OrCondition (ALTERNATE?='otherwise' doIf=DoIf)?;
+
+Instruction:
+	((((specificTypeRef=SpecificTypeRef) | typeRef=[TypeRef]) ASSIGNMENT?='=')? instance=Instance // put check to make sure method call exists
+	| returnStatement=ReturnStatement
+	| breakStatement=BreakStatement
+	| continueStatement=ContinueStatement)
+	| printStatement=PrintStatement;
+
+PrintStatement:
+	'print' '(' instance=Instance ')';
+
+ReturnStatement:
+	'return' instance=Instance;
+
+BreakStatement:
+	{BreakStatement}
+	'break' constraint=Constraint?;
+
+ContinueStatement:
+	{ContinueStatement}
+	'continue' constraint=Constraint?;
+
+Instance:
+	(=>methodCall=MethodCall | stateOrVariable=[StateOrVariable|ID] | literal=Literal | newInstance=NewInstance | listInstance=ListInstance ) 
+		(dotMethodCall=DotMethodCall | operatorCall=OperatorCall)?;
+
+StateOrVariable:
+	TypeRef | State;
+
+ListInstance:
+	{ListInstance} ('[' argument=Argument? ']');
+
+NewInstance:
+	'new' entity=[Entity|QualifiedName] '(' argument=Argument? ')' (=> '{' allNestedInstance+=NestedInstance+ '}')?;
+
+NestedInstance:
+	specificTypeRef=[SpecificTypeRef|QualifiedName] '=' instance=Instance ';';
+
+MethodCall:
+	methodDeclaration=[MethodDeclaration|QualifiedName] '(' argument=Argument? ')';
+
+DotMethodCall:
+	'.' methodCall=MethodCall (dotMethodCall=DotMethodCall | operatorCall=OperatorCall)?;
+
+Argument:
+	instance=Instance (list?=',' next=Argument)?;
+
+OperatorCall:
+	=> operator=Operator instance=Instance (operatorCall=OperatorCall)?;
+
+enum Operator:
+	ADD='+' | SUBSTRACT='-' | MULTIPLY='*' | DIVISION='%' | SAME='==' | NOTSAME='!=' | GREATERTHAN='>' |
+	LESSTHAN='<' | LESSTHANOREQUALTO='<=' | GREATERTHANOREQUALTO='>=' | ONEOF='oneof' | IS='is' | HAS='has' |
+	TYPEOF='instanceof';
+
+Literal:
+	THIS='this' | TRUE='true' | FALSE='false' | NULL='null' | number=DECIMAL_LITERAL | string=STRING;
+
+DECIMAL_LITERAL:
+	integer=INT ((PERIOD?='.' fraction=INT (FLOATING?=('f' | 'F'))?) | TOOLONG?=('l' | 'L'))?;
+
