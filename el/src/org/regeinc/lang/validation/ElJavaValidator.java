@@ -23,9 +23,8 @@ import org.regeinc.lang.util.Finder;
 
 /**
  * this class checks for
- * uniqueness
- * right thing at right place
- * completeness
+ * uniqueness, completeness and making sure that 
+ * right thing is located at the right place (extension to scoping)
  * 
  * @author nilesh
  *

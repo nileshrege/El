@@ -13,6 +13,9 @@ Element:
 Package:
 	'package' name=QualifiedName ';';
 
+/**
+ * check: warning on duplicate
+ */
 Import:
 	'import' importedNamespace=QualifiedNameWithWildCard ';';
 
@@ -28,38 +31,73 @@ enum Visibility:
 Type:
 	Contract | Entity;
 
+/**
+ * check: error on usage of keyword as name
+ * check: error on duplicate
+ * check: error on extending self
+ * check: error on private|protected Visibility
+ * check: error on duplicate MethodDeclaration
+ * check: error on extending final Contract
+ */
 Contract:
 	visibility=Visibility? 'interface' name=ID (EXTENDS?='extends' type=[Contract|QualifiedName])?
 	'{'
 	(allMethodDeclaration+=MethodDeclaration ';')*
 	'}';
 
+/**
+ * check: error on usage of keyword as name
+ * check: error on duplicate
+ * check: error on coexistence of abstract and final
+ * check: error on extending self
+ * check: error on implementing duplicate Contract
+ * check: error on extending final Entity
+ */
 Entity:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID (EXTENDS?='extends'
-	type=[Type|QualifiedName])?
-	(IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (',' allContract+=[Contract|QualifiedName])*)?
-	'{'
-	(allAssociation+=Association
-	| allState+=State
-	| allMethodDefinition+=MethodDefinition)*
-	'}';
+	type=[Type|QualifiedName])? (IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (','
+	allContract+=[Contract|QualifiedName])*)? '{' (allAssociation+=Association | allState+=State |
+	allMethodDefinition+=MethodDefinition)* '}';
 
+/**
+ * check: error on usage of keyword as name
+ * check: error on duplicate State
+ */
 State:
 	'state' name=ID constraint=Constraint? ';';
 
+/**
+ * check: error on usage of keyword as name
+ * check: error on initializing with different Type
+ * check: error on duplicate Association
+ */
 Association:
 	visibility=Visibility? IDENTITY?='identity'?
 	specificTypeRef=SpecificTypeRef (constraint=Constraint | (INITIALIZED?='=' instance=Instance))? ';';
 
+/**
+ * check: error on usage of keyword as name
+ * check: error on usage of containing Type's name
+ * check: error on duplicate MethodDeclaration
+ */
 MethodDeclaration:
 	returnType=[Type|QualifiedName]? name=ID '(' (parameter=Parameter)? ')';
 
+/**
+ * check: error on usage of keyword as name
+ */
 Parameter:
 	specificTypeRef=SpecificTypeRef (list?=',' next=Parameter)?;
 
+/**
+ * check: error on usage of keyword as name
+ */
 SpecificTypeRef:
 	orTypePrefix=OrTypePrefix? typeRef=TypeRef;
 
+/**
+ * check: error on usage of keyword as name
+ */
 TypeRef:
 	FINAL?='final'? NOTNULL?='notnull'? type=[Type|QualifiedName] name=ID;
 
@@ -76,6 +114,11 @@ TypePrefix:
 	type=[Type|QualifiedName]
 	| '(' orTypePrefix=OrTypePrefix ')';
 
+/**
+ * check: error on usage of keyword as name
+ * check: error on coexistence of abstract and final
+ * check: error on duplicate MethodDefinition
+ */
 MethodDefinition:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')?
 	methodDeclaration=MethodDeclaration (UNDEFINED?=';' | (constraint=Constraint? methodBody=MethodBody));
@@ -92,8 +135,13 @@ AndCondition:
 NotCondition:
 	NOT?='!'? condition=Condition;
 
+/**
+ * check: error on usage of non boolean type instance
+ * scope: all State, all Association, all Parameter 
+ * scope: all public Association.Association, all Association.State, all public Parameter.Association, all Parameter.State 
+ */
 Condition:
-	instance=Instance // only boolean
+	instance=Instance
 	| groupCondition=GroupCondition;
 
 GroupCondition:
@@ -123,10 +171,16 @@ Else:
 While:
 	'while' orCondition=OrCondition methodBody=MethodBody;
 
+/**
+ * check: error on usage of typeRef other than instanceof Guard  
+ */
 Guard:
 	typeRef=[TypeRef] 'guarded' allEntity+=[Entity|QualifiedName] (',' allEntity+=[Entity|QualifiedName])*
 	methodBody=MethodBody;
 
+/**
+ * scope: let expression not allowed outside of containing LineStatement
+ */
 LineStatement:
 	(doWhere=DoWhere
 	| (LETEXPRESSION?='let' localVariableBinding=LocalVariableBinding 'in' doWhere=DoWhere)) ';';
@@ -143,8 +197,11 @@ DoWhere:
 Where:
 	clause=Clause (NESTED?='and' where=Where)?;
 
+/**
+ * check: error on usage of instance other than instanceof List
+ */
 Clause:
-	(=> typeRef=TypeRef 'from' instance=Instance) // only list instance
+	(typeRef=TypeRef 'from' instance=Instance) // only list instance
 	| orCondition=OrCondition;
 
 DoIf:
@@ -153,30 +210,21 @@ DoIf:
 Provided:
 	orCondition=OrCondition (ALTERNATE?='otherwise' doIf=DoIf)?;
 
+/**
+ * check: error on usage of passive Instance in isolation
+ */
 Instruction:
-	((((specificTypeRef=SpecificTypeRef) | typeRef=[TypeRef]) ASSIGNMENT?='=')? instance=Instance // put check to make sure method call exists
-	| returnStatement=ReturnStatement
-	| breakStatement=BreakStatement
-	| continueStatement=ContinueStatement)
-	| printStatement=PrintStatement;
+	((((specificTypeRef=SpecificTypeRef | typeRef=[TypeRef]) ASSIGNMENT?='=') | PRINT?='print' | RETURN?='return')?
+	instance=Instance) | (BREAK?='break' | CONTINUE?='continue');
 
-PrintStatement:
-	'print' '(' instance=Instance ')';
-
-ReturnStatement:
-	'return' instance=Instance;
-
-BreakStatement:
-	{BreakStatement}
-	'break' constraint=Constraint?;
-
-ContinueStatement:
-	{ContinueStatement}
-	'continue' constraint=Constraint?;
-
+/**
+ * check: error on trying to access state.property
+ * scope: all public Association as referredStateOrVariable upon referred by typeRef
+ */
 Instance:
-	(=>methodCall=MethodCall | stateOrVariable=[StateOrVariable|ID] | literal=Literal | newInstance=NewInstance | listInstance=ListInstance ) 
-		(dotMethodCall=DotMethodCall | operatorCall=OperatorCall)?;
+	((stateOrVariable=[StateOrVariable|ID] (=> '.' referredStateOrVariable=[StateOrVariable|ID])?)
+	| literal=Literal | newInstance=NewInstance | listInstance=ListInstance) (dotMethodCall=DotMethodCall |
+	operatorCall=OperatorCall)?;
 
 StateOrVariable:
 	TypeRef | State;

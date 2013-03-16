@@ -8,6 +8,7 @@ import org.regeinc.lang.el.DECIMAL_LITERAL
 import org.regeinc.lang.el.Argument
 import org.regeinc.lang.el.State
 import org.regeinc.lang.el.TypeRef
+import org.regeinc.lang.el.StateOrVariable
 
 class InstanceJ {
 	private new(){		
@@ -20,13 +21,11 @@ class InstanceJ {
 	}
 
 	def compile(Instance instance)'''
-		«IF instance.stateOrVariable!=null»«IF instance.stateOrVariable instanceof State»is«(instance.stateOrVariable as State).name.toFirstUpper»()«
-			ELSEIF instance.stateOrVariable instanceof TypeRef»«(instance.stateOrVariable as TypeRef).name»«ENDIF»«
+		«IF instance.stateOrVariable!=null»«compile(instance.stateOrVariable)»«IF instance.referredStateOrVariable!=null»«compileReferred(instance.referredStateOrVariable)»«ENDIF»«
 		ELSEIF instance.literal!=null»«compile(instance.literal)»«
 		ELSEIF instance.listInstance!=null»«compile(instance.listInstance)»«
 		ELSEIF instance.newInstance!=null»«compile(instance.newInstance)»«
 		ELSEIF instance.dotMethodCall!=null»«MethodJ::instance.compile(instance.dotMethodCall)»«
-		ELSEIF instance.methodCall!=null»«MethodJ::instance.compile(instance.methodCall)»«
 		ELSEIF instance.operatorCall!=null»«MethodJ::instance.compile(instance.operatorCall)»«ENDIF»'''
 		
 	def compile(NewInstance newInstance)'''
@@ -37,6 +36,14 @@ class InstanceJ {
 				ENDFOR»«
 			ENDIF»'''
 
+	def compile(StateOrVariable stateOrVariable)'''
+		«IF stateOrVariable instanceof State»is«(stateOrVariable as State).name.toFirstUpper»()«
+			ELSEIF stateOrVariable instanceof TypeRef»«(stateOrVariable as TypeRef).name»«ENDIF»'''
+
+	def compileReferred(StateOrVariable stateOrVariable)'''
+		.«IF stateOrVariable instanceof State»is«(stateOrVariable as State).name.toFirstUpper»()«
+			ELSEIF stateOrVariable instanceof TypeRef»get«(stateOrVariable as TypeRef).name.toFirstUpper»()«ENDIF»'''
+	
 	def compile(ListInstance listInstance)'''
 		java.util.Arrays.asList(«compile(listInstance.argument)»)'''	
 

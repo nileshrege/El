@@ -1,17 +1,15 @@
 package org.regeinc.lang.generator
 
+import org.regeinc.lang.el.Clause
+import org.regeinc.lang.el.DoIf
+import org.regeinc.lang.el.DoWhere
+import org.regeinc.lang.el.Instruction
 import org.regeinc.lang.el.LineStatement
 import org.regeinc.lang.el.LocalVariableBinding
 import org.regeinc.lang.el.LocalVariableDeclaration
-import org.regeinc.lang.el.DoWhere
-import org.regeinc.lang.el.DoIf
-import org.regeinc.lang.el.ReturnStatement
-import org.regeinc.lang.el.ContinueStatement
-import org.regeinc.lang.el.PrintStatement
-import org.regeinc.lang.el.BreakStatement
-import org.regeinc.lang.el.Instruction
 import org.regeinc.lang.el.Where
-import org.regeinc.lang.el.Clause
+
+import static extension org.regeinc.lang.generator.LineStatementJ.*
 
 class LineStatementJ {
 	private new(){		
@@ -60,10 +58,10 @@ class LineStatementJ {
 		ELSE»«compile(doIf.instruction)»«ENDIF»'''
 	
 	def compile(Instruction instruction)'''
-		«IF instruction.breakStatement!=null»«compile(instruction.breakStatement)»
-		«ELSEIF instruction.continueStatement!=null»«compile(instruction.continueStatement)»
-		«ELSEIF instruction.returnStatement!=null»«compile(instruction.returnStatement)»
-		«ELSEIF instruction.printStatement!=null»«compile(instruction.printStatement)»
+		«IF instruction.BREAK»break
+		«ELSEIF instruction.CONTINUE»continue
+		«ELSEIF instruction.RETURN»return «InstanceJ::instance.compile(instruction.instance)»
+		«ELSEIF instruction.PRINT»System.out.println(«InstanceJ::instance.compile(instruction.instance)»)
 		«ELSEIF instruction.instance!=null»«IF instruction.ASSIGNMENT»
 			«IF instruction.specificTypeRef!=null»
 			«instruction.specificTypeRef.typeRef.type.name» temp«instruction.specificTypeRef.typeRef.name.toFirstUpper» = «InstanceJ::instance.compile(instruction.instance)»;
@@ -74,21 +72,5 @@ class LineStatementJ {
 			«ELSEIF instruction.typeRef!=null»
 			«instruction.typeRef.name» = «InstanceJ::instance.compile(instruction.instance)»;
 			«ENDIF»«ENDIF»«InstanceJ::instance.compile(instruction.instance)»;«ENDIF»'''
-	
-	def compile(ReturnStatement returnStatement)'''
-		return «IF returnStatement.instance!=null»«InstanceJ::instance.compile(returnStatement.instance)»«ENDIF»'''
-
-	def compile(BreakStatement breakStatement)'''
-		if(«ConditionJ::instance.compile(breakStatement.constraint.orCondition)»){
-			continue;
-		}'''
-		
-	def compile(ContinueStatement continueStatement)'''
-		if(«ConditionJ::instance.compile(continueStatement.constraint.orCondition)»){
-			continue;
-		}'''
-		
-	def compile(PrintStatement printStatement)'''
-		System.out.println(«InstanceJ::instance.compile(printStatement.instance)»);'''	
 	
 }
