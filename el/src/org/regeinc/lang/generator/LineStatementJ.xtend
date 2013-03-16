@@ -72,5 +72,4 @@ class LineStatementJ {
 			«ELSEIF instruction.typeRef!=null»
 			«instruction.typeRef.name» = «InstanceJ::instance.compile(instruction.instance)»;
 			«ENDIF»«ENDIF»«InstanceJ::instance.compile(instruction.instance)»;«ENDIF»'''
-	
 }

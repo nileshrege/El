@@ -5,10 +5,7 @@ package org.regeinc.lang.scoping;
 
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 
-/**
- * This class contains custom scoping description and 
- * is responsible to make sure that the "right thing is at the right place"
- * 
+/** 
  * see : http://www.eclipse.org/Xtext/documentation/latest/xtext.html#scoping
  * on how and when to use it 
  *
