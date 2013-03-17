@@ -56,12 +56,13 @@ Contract:
 Entity:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID (EXTENDS?='extends'
 	type=[Type|QualifiedName])? (IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (','
-	allContract+=[Contract|QualifiedName])*)? '{' (allAssociation+=Association | allState+=State |
-	allMethodDefinition+=MethodDefinition)* '}';
+	allContract+=[Contract|QualifiedName])*)? '{' (allMethodDefinition+=MethodDefinition | allAssociation+=Association |
+	allState+=State)* '}';
 
 /**
  * check: error on usage of keyword as name
  * check: error on duplicate State
+ * check: error on cyclic reference to self
  */
 State:
 	'state' name=ID constraint=Constraint? ';';

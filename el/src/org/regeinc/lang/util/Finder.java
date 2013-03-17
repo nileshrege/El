@@ -14,6 +14,7 @@ import org.regeinc.lang.el.MethodDeclaration;
 import org.regeinc.lang.el.MethodDefinition;
 import org.regeinc.lang.el.Model;
 import org.regeinc.lang.el.Parameter;
+import org.regeinc.lang.el.State;
 import org.regeinc.lang.el.Type;
 import org.regeinc.lang.el.TypeRef;
 
@@ -151,10 +152,12 @@ public class Finder {
 
 		List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
 		MethodDefinition methodDefinition = (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
-		MethodDeclaration methodDeclaration = methodDefinition.getMethodDeclaration();
-		if (methodDeclaration != null) {
-			Parameter parameter = methodDeclaration.getParameter();
-			allTypeRef.addAll(new ParameterFinder().find(parameter));
+		if(methodDefinition!=null){
+			MethodDeclaration methodDeclaration = methodDefinition.getMethodDeclaration();
+			if (methodDeclaration != null) {
+				Parameter parameter = methodDeclaration.getParameter();
+				allTypeRef.addAll(new ParameterFinder().find(parameter));
+			}	
 		}
 		return allTypeRef;
 	}
@@ -174,6 +177,36 @@ public class Finder {
 		LineStatement lineStatement = (LineStatement) lookUp(context, new LineStatementCriteria());
 		if (lineStatement != null && lineStatement.getLocalVariableBinding()!= null) {
 			allTypeRef.addAll(new LocalVariableBindingFinder().find(lineStatement.getLocalVariableBinding()));
+		}
+		return allTypeRef;
+	}
+	
+	public static List<State> allState(EObject context, State excluded) {
+		List<State> allState = new ArrayList<State>();
+		Entity entity = (Entity) lookUp(context, new EntityCriteria());
+		if (entity != null) {
+			for(State state : entity.getAllState()){
+				if(excluded!=null){
+					if(state.equals(excluded))
+						continue;	
+				}
+				allState.add(state);	
+			}
+		}
+		return allState;
+	}
+
+	public static List<TypeRef> allAssociation(EObject context, Association excluded) {
+		List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
+		Entity entity = (Entity) lookUp(context, new EntityCriteria());
+		if (entity != null) {
+			for(Association association : entity.getAllAssociation()){
+				if(excluded!=null){
+					if(excluded.equals(association)) 
+						continue;
+				}
+				allTypeRef.add(association.getSpecificTypeRef().getTypeRef());
+			}
 		}
 		return allTypeRef;
 	}

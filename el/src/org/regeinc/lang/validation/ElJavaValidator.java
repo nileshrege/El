@@ -44,7 +44,24 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 			}			
 		}
 	}
-
+	
+	@Check
+	public void checkStateCyclicReferenceToSelf(org.regeinc.lang.el.State state){
+		if(state.getConstraint()!=null){
+			if (state.getConstraint().getOrCondition().getAndCondition()
+					.getNotCondition().getCondition().getInstance()
+					.getStateOrVariable() instanceof org.regeinc.lang.el.State) {
+				
+				org.regeinc.lang.el.State referred = (org.regeinc.lang.el.State)state.getConstraint().getOrCondition().getAndCondition()
+						.getNotCondition().getCondition().getInstance().getStateOrVariable();
+				
+				if(state.equals(referred)){
+					error("a state can not refer to its own state", ElPackage.eINSTANCE.eContainingFeature());
+				}
+			}
+		}
+	}
+	
 	@Check
 	public void checkDuplicateAssociation(Association association){
 		List<Association> allAssociation = ((Entity)association.eContainer()).getAllAssociation();
