@@ -6,10 +6,10 @@ import java.util.List;
 import org.eclipse.xtext.validation.Check;
 import org.regeinc.lang.el.Association;
 import org.regeinc.lang.el.Contract;
-import org.regeinc.lang.el.DotMethodCall;
 import org.regeinc.lang.el.ElPackage;
 import org.regeinc.lang.el.Element;
 import org.regeinc.lang.el.Entity;
+import org.regeinc.lang.el.Expression;
 import org.regeinc.lang.el.Import;
 import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LocalVariableDeclaration;
@@ -47,13 +47,19 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	
 	@Check
 	public void checkStateCyclicReferenceToSelf(org.regeinc.lang.el.State state){
-		if(state.getConstraint()!=null){
-			if (state.getConstraint().getOrCondition().getAndCondition()
-					.getNotCondition().getCondition().getInstance()
-					.getStateOrVariable() instanceof org.regeinc.lang.el.State) {
-				
-				org.regeinc.lang.el.State referred = (org.regeinc.lang.el.State)state.getConstraint().getOrCondition().getAndCondition()
-						.getNotCondition().getCondition().getInstance().getStateOrVariable();
+		if (state.getConstraint() != null
+				&& state.getConstraint().getCondition().getAnd().getNot()
+						.getComparison().getExpression().getInstance()
+						.getStateOrTypeRef() != null) {
+
+			if (state.getConstraint().getCondition().getAnd().getNot()
+					.getComparison().getExpression().getInstance()
+					.getStateOrTypeRef() instanceof org.regeinc.lang.el.State) {
+
+				org.regeinc.lang.el.State referred = (org.regeinc.lang.el.State) state
+						.getConstraint().getCondition().getAnd().getNot()
+						.getComparison().getExpression().getInstance()
+						.getStateOrTypeRef();
 				
 				if(state.equals(referred)){
 					error("a state can not refer to its own state", ElPackage.eINSTANCE.eContainingFeature());
@@ -226,7 +232,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	}
 	
 	boolean isSpecificTypeParam(Parameter parameter){
-		if(parameter.getSpecificTypeRef().getOrTypePrefix()==null && parameter.isList()){
+		if(parameter.getSpecificTypeRef().getTypePrefix()==null && parameter.isList()){
 			return isSpecificTypeParam(parameter.getNext());
 		}
 		return false;
@@ -246,38 +252,44 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	@Check
 	public void checkTypeMatches(LocalVariableDeclaration localVariableDeclaration){
 		Type lhs = localVariableDeclaration.getSpecificTypeRef().getTypeRef().getType();
-		Type rhs = instanceType(localVariableDeclaration.getInstance());
-
-		Element element = (Element)lhs.eContainer();
-		String lhsn = element.getPkg()+"."+lhs.getName();
-		String rhsn = element.getPkg()+"."+rhs.getName();
-		if(!lhsn.equals(rhsn)){
+		Type rhs = instanceType(getInstance(localVariableDeclaration.getExpression()));
+		if(lhs!=null && rhs!=null){
+			Element element = (Element)lhs.eContainer();
+			String lhsn = element.getPkg()+"."+lhs.getName();
+			String rhsn = element.getPkg()+"."+rhs.getName();
+			if(!lhsn.equals(rhsn)){
+				error("type mismatch", ElPackage.eINSTANCE.eContainingFeature());
+			}	
+		}else{
 			error("type mismatch", ElPackage.eINSTANCE.eContainingFeature());
+		}
+	}
+
+	Instance getInstance(Expression expression){
+		if(expression.getExpression()==null){
+			return expression.getInstance();
+		}else{
+			return getInstance(expression.getExpression());
 		}
 	}
 	
 	Type instanceType(Instance instance){
 		Type result = null;
-		if(instance.getDotMethodCall()!=null){
-			MethodDeclaration methodDeclaration = lastMethodCall(instance.getDotMethodCall()).getMethodCall().getMethodDeclaration();
-			if(methodDeclaration.getReturnType()!=null){
-				result = methodDeclaration.getReturnType().getType();
-			}
-		}else if(instance.getStateOrVariable()!=null && instance.getStateOrVariable() instanceof TypeRef){
-			result = ((TypeRef)instance.getStateOrVariable()).getType();
+		if(instance.getStateOrTypeRef()!=null && instance.getStateOrTypeRef() instanceof TypeRef){
+			result = ((TypeRef)instance.getStateOrTypeRef()).getType();
 		}else if(instance.getLiteral()!=null){
 			if(instance.getLiteral().getTHIS()!=null){
 				result = Finder.type(instance);
 			}
-		}
+		}else if(instance.getListInstance()!=null){
+			// TODO
+		}else if(instance.getNewInstance()!=null){
+			result = instance.getNewInstance().getEntity();
+		}else if(instance.getMethodCall()!=null){
+			if(instance.getMethodCall().getMethodDeclaration().getReturnType()!=null){
+				result = instance.getMethodCall().getMethodDeclaration().getReturnType();
+			}
+		} 
 		return result;
-	}
-	
-	DotMethodCall lastMethodCall(DotMethodCall dotMethodCall){
-		if(dotMethodCall.getDotMethodCall()!=null){
-			return lastMethodCall(dotMethodCall);
-		}else{
-			return dotMethodCall;
-		}
 	}
 }

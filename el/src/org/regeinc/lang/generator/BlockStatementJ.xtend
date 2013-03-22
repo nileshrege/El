@@ -23,13 +23,13 @@ class BlockStatementJ {
 	'''
 
 	def compile(While whyle)'''
-		while(«ConditionJ::instance.compile(whyle.orCondition)»){
+		while(«ConditionJ::instance.compile(whyle.condition)»){
 			«IF whyle.methodBody!=null»«MethodJ::instance.compile(whyle.methodBody)»«ENDIF»
 		}
 		'''
 
 	def compile(If ef)'''
-		if(«ConditionJ::instance.compile(ef.orCondition)»){
+		if(«ConditionJ::instance.compile(ef.condition)»){
 			«IF ef.methodBody!=null»«MethodJ::instance.compile(ef.methodBody)»«ENDIF»
 		}«IF ef.elseBlock!=null»«compile(ef.elseBlock)»«ENDIF»
 		'''

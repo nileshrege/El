@@ -35,8 +35,8 @@ class AssociationJ {
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
 		»void set«association.specificTypeRef.typeRef.name.toFirstUpper»(«association.specificTypeRef.typeRef.type.name» «association.specificTypeRef.typeRef.name»){
 			«IF association.specificTypeRef.typeRef.NOTNULL»«compileNotNullPrefix(association.specificTypeRef)»«ENDIF»
-			«IF association.specificTypeRef.orTypePrefix!=null»«new SpecificTypeRefJ(association.specificTypeRef.typeRef.name).applyConstraint(association.specificTypeRef.orTypePrefix)»«ENDIF»
-			«IF association.constraint!=null»«ConditionJ::instance.compile(association.constraint.orCondition)»«ENDIF»
+			«IF association.specificTypeRef.typePrefix!=null»«new TypePrefixJ(association.specificTypeRef.typeRef.name).applyConstraint(association.specificTypeRef.typePrefix)»«ENDIF»
+			«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition)»«ENDIF»
 			this.«association.specificTypeRef.typeRef.name» = «association.specificTypeRef.typeRef.name»;
 		}
 	'''
@@ -45,7 +45,7 @@ class AssociationJ {
 		
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF»«(association.eContainer as Entity).name» with«association.specificTypeRef.typeRef.name.toFirstUpper»(«association.specificTypeRef.typeRef.type.name» «association.specificTypeRef.typeRef.name»){
 			«IF association.specificTypeRef.typeRef.NOTNULL»«compileNotNullPrefix(association.specificTypeRef)»«ENDIF»
-			«IF association.specificTypeRef.orTypePrefix!=null»«»«ENDIF»
+			«IF association.specificTypeRef.typePrefix!=null»«»«ENDIF»
 			«IF association.constraint!=null»«»«ENDIF»
 			this.«association.specificTypeRef.typeRef.name» = «association.specificTypeRef.typeRef.name»;
 			return this;

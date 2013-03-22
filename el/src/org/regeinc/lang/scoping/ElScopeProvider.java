@@ -12,7 +12,7 @@ import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 import org.regeinc.lang.el.State;
-import org.regeinc.lang.el.StateOrVariable;
+import org.regeinc.lang.el.StateOrTypeRef;
 import org.regeinc.lang.util.Finder;
 
 /** 
@@ -22,8 +22,8 @@ import org.regeinc.lang.util.Finder;
  */
 public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 
-	IScope scope_Instance_stateOrVariable(EObject context, EReference reference){
-		List<StateOrVariable> allStateOrVariable = new ArrayList<StateOrVariable>();
+	IScope scope_Instance_stateOrTypeRef(EObject context, EReference reference){
+		List<StateOrTypeRef> allStateOrVariable = new ArrayList<StateOrTypeRef>();
 		State state = null;
 		if(context.eContainer() instanceof State){
 			state = (State)context.eContainer();

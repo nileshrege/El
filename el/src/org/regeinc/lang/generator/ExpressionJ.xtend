@@ -1,5 +1,6 @@
 package org.regeinc.lang.generator
 
+import org.regeinc.lang.el.Expression
 import org.regeinc.lang.el.Instance
 import org.regeinc.lang.el.NewInstance
 import org.regeinc.lang.el.ListInstance
@@ -8,39 +9,42 @@ import org.regeinc.lang.el.DECIMAL_LITERAL
 import org.regeinc.lang.el.Argument
 import org.regeinc.lang.el.State
 import org.regeinc.lang.el.TypeRef
-import org.regeinc.lang.el.StateOrVariable
+import org.regeinc.lang.el.StateOrTypeRef
 
-class InstanceJ {
+class ExpressionJ{
 	private new(){		
 	}
-	static InstanceJ instanceJ
-	def static InstanceJ instance(){
-		if(instanceJ==null)
-			instanceJ = new InstanceJ()
-		return instanceJ
+	static ExpressionJ expressionJ
+	def static ExpressionJ instance(){
+		if(expressionJ==null)
+			expressionJ = new ExpressionJ()
+		return expressionJ
 	}
-
+	
+	def compile(Expression expression)'''
+		«compile(expression.instance)»«
+		IF expression.expression!=null»«expression.operator.toString»«compile(expression.expression)»«ENDIF»'''
+		
 	def compile(Instance instance)'''
-		«IF instance.stateOrVariable!=null»«compile(instance.stateOrVariable)»«IF instance.referredStateOrVariable!=null»«compileReferred(instance.referredStateOrVariable)»«ENDIF»«
+		«IF instance.stateOrTypeRef!=null»«compile(instance.stateOrTypeRef)»«
+		ELSEIF instance.methodCall!=null»«MethodJ::instance.compile(instance.methodCall)»«
 		ELSEIF instance.literal!=null»«compile(instance.literal)»«
 		ELSEIF instance.listInstance!=null»«compile(instance.listInstance)»«
-		ELSEIF instance.newInstance!=null»«compile(instance.newInstance)»«
-		ELSEIF instance.dotMethodCall!=null»«MethodJ::instance.compile(instance.dotMethodCall)»«
-		ELSEIF instance.operatorCall!=null»«MethodJ::instance.compile(instance.operatorCall)»«ENDIF»'''
+		ELSEIF instance.newInstance!=null»«compile(instance.newInstance)»«ENDIF»'''
 		
 	def compile(NewInstance newInstance)'''
 		new «newInstance.entity.name»(«IF newInstance.argument!=null»«ENDIF»)«
 			IF !newInstance.allNestedInstance.nullOrEmpty»«
 				FOR nestedInstance:newInstance.allNestedInstance
-					».with«nestedInstance.specificTypeRef.typeRef.name.toFirstUpper»(«compile(nestedInstance.instance)»)«
+					».with«nestedInstance.specificTypeRef.typeRef.name.toFirstUpper»(«compile(nestedInstance.expression)»)«
 				ENDFOR»«
 			ENDIF»'''
 
-	def compile(StateOrVariable stateOrVariable)'''
+	def compile(StateOrTypeRef stateOrVariable)'''
 		«IF stateOrVariable instanceof State»is«(stateOrVariable as State).name.toFirstUpper»()«
 			ELSEIF stateOrVariable instanceof TypeRef»«(stateOrVariable as TypeRef).name»«ENDIF»'''
 
-	def compileReferred(StateOrVariable stateOrVariable)'''
+	def compileReferred(StateOrTypeRef stateOrVariable)'''
 		.«IF stateOrVariable instanceof State»is«(stateOrVariable as State).name.toFirstUpper»()«
 			ELSEIF stateOrVariable instanceof TypeRef»get«(stateOrVariable as TypeRef).name.toFirstUpper»()«ENDIF»'''
 	
@@ -48,10 +52,10 @@ class InstanceJ {
 		java.util.Arrays.asList(«compile(listInstance.argument)»)'''	
 
 	def compile(Argument argument)'''
-		«compile(argument.instance)»«IF argument.list», «compile(argument.next)»«ENDIF»'''
+		«compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''
 	
 	def compile(Literal literal)'''
-		«IF literal.string!=null»«literal.string»«
+		«IF literal.string!=null»«IF literal.string.length>0»«literal.string»«ELSE»""«ENDIF»«
 		ELSEIF literal.number!=null»«compile(literal.number)»«
 		ELSEIF literal.THIS!=null»this«
 		ELSEIF literal.NULL!=null»null«
@@ -61,5 +65,5 @@ class InstanceJ {
 	def compile(DECIMAL_LITERAL decimal)'''
 		«IF decimal.integer!=null»«decimal.integer»«ENDIF»«
 			IF decimal.PERIOD».«decimal.fraction»«IF decimal.FLOATING»f«ENDIF»«ELSEIF decimal.TOOLONG»l«ENDIF»'''
-	
+
 }
