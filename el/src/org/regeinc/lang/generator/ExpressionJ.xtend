@@ -46,7 +46,7 @@ class ExpressionJ{
 		ELSEIF instance.listInstance!=null»«compile(instance.listInstance)»«
 		ELSEIF instance.newInstance!=null»«compile(instance.newInstance)»«ENDIF»«
 		IF instance.dotMethodCall!=null»«MethodJ::instance.compile(instance.dotMethodCall)»«ENDIF»'''
-	
+	 
 	def compile(StateOrReference stateOrReference)'''
 		«IF stateOrReference instanceof State»is«(stateOrReference as State).name.toFirstUpper»()«
 			ELSEIF stateOrReference instanceof Reference»«(stateOrReference as Reference).name»«ENDIF»'''

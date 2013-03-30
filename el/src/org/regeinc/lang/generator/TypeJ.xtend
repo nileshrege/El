@@ -19,7 +19,7 @@ class TypeJ {
 			compile(type as Contract)
 		}else if(type instanceof Entity){
 			compile(type as Entity)
-		}
+		} 
 	}
 
 	def compile(Contract contract)'''

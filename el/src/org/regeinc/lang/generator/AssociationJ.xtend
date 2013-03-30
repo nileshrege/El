@@ -13,7 +13,7 @@ class AssociationJ {
 			associationJ = new AssociationJ()
 		return associationJ
 	}
-	
+	 
 	def compile(Association association)'''
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
 		»«association.qualifiedReference.reference.type.name» «association.qualifiedReference.reference.name»;

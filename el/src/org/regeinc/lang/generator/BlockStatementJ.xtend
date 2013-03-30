@@ -15,7 +15,7 @@ class BlockStatementJ {
 			blockStatementJ = new BlockStatementJ()
 		return blockStatementJ
 	}
-	
+	 
 	def compile(BlockStatement blockStatement)'''
 		«IF blockStatement.whileBlock!=null»«compile(blockStatement.whileBlock)»«
 		ELSEIF blockStatement.ifBlock!=null»«compile(blockStatement.ifBlock)»«

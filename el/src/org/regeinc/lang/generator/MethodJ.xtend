@@ -10,7 +10,7 @@ import org.regeinc.lang.el.Parameter
 import static extension org.regeinc.lang.generator.MethodJ.*
 import org.regeinc.lang.el.DotMethodCall
 
-class MethodJ {
+class MethodJ { 
 	private new(){		
 	}
 	static MethodJ methodJ
