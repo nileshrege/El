@@ -12,7 +12,7 @@ import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 import org.regeinc.lang.el.State;
-import org.regeinc.lang.el.StateOrVariable;
+import org.regeinc.lang.el.StateOrReference;
 import org.regeinc.lang.util.Finder;
 
 /** 
@@ -21,18 +21,17 @@ import org.regeinc.lang.util.Finder;
  *
  */
 public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
-
-	IScope scope_Instance_stateOrVariable(EObject context, EReference reference){
-		List<StateOrVariable> allStateOrVariable = new ArrayList<StateOrVariable>();
+	IScope scope_Instance_stateOrTypeRef(EObject context, EReference reference){
+		List<StateOrReference> allStateOrReference = new ArrayList<StateOrReference>();
 		State state = null;
 		if(context.eContainer() instanceof State){
 			state = (State)context.eContainer();
 		}
-		allStateOrVariable.addAll(Finder.allState(context, state));
-		allStateOrVariable.addAll(Finder.allAssociation(context, null));
-		allStateOrVariable.addAll(Finder.allParameter(context));
+		allStateOrReference.addAll(Finder.allState(context, state));
+		allStateOrReference.addAll(Finder.allAssociation(context, null));
+		allStateOrReference.addAll(Finder.allParameter(context));
 		
-		IScope iscope = Scopes.scopeFor(allStateOrVariable);
+		IScope iscope = Scopes.scopeFor(allStateOrReference);
 		return iscope;
 	}
 }

@@ -16,7 +16,7 @@ import org.regeinc.lang.el.Model;
 import org.regeinc.lang.el.Parameter;
 import org.regeinc.lang.el.State;
 import org.regeinc.lang.el.Type;
-import org.regeinc.lang.el.TypeRef;
+import org.regeinc.lang.el.Reference;
 
 interface Criteria {
 	boolean isSatisfiedBy(EObject context);
@@ -87,12 +87,12 @@ public class Finder {
 		return type;
 	}
 
-	public static List<TypeRef> associations(EObject context) {
-		List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
+	public static List<Reference> associations(EObject context) {
+		List<Reference> allTypeRef = new ArrayList<Reference>();
 		Entity entity = (Entity) lookUp(context, new EntityCriteria());
 		if (entity != null) {
 			for (Association association : entity.getAllAssociation()) {
-				allTypeRef.add(association.getSpecificTypeRef().getTypeRef());
+				allTypeRef.add(association.getQualifiedReference().getReference());
 			}
 		}
 		return allTypeRef;
@@ -138,11 +138,11 @@ public class Finder {
 		return allMethodDefinition;
 	}
 
-	public static List<TypeRef> allParameter(EObject context) {
+	public static List<Reference> allParameter(EObject context) {
 		class ParameterFinder {
-			List<TypeRef> find(Parameter parameter) {
-				List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
-				allTypeRef.add(parameter.getSpecificTypeRef().getTypeRef());
+			List<Reference> find(Parameter parameter) {
+				List<Reference> allTypeRef = new ArrayList<Reference>();
+				allTypeRef.add(parameter.getQualifiedReference().getReference());
 				if(parameter.isList()){
 					allTypeRef.addAll(find(parameter.getNext()));
 				}
@@ -150,7 +150,7 @@ public class Finder {
 			}
 		}
 
-		List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
+		List<Reference> allTypeRef = new ArrayList<Reference>();
 		MethodDefinition methodDefinition = (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
 		if(methodDefinition!=null){
 			MethodDeclaration methodDeclaration = methodDefinition.getMethodDeclaration();
@@ -162,18 +162,18 @@ public class Finder {
 		return allTypeRef;
 	}
 
-	public static List<TypeRef> allLocalVariable(EObject context) {
+	public static List<Reference> allLocalVariable(EObject context) {
 		class LocalVariableBindingFinder{
-			List<TypeRef> find(LocalVariableBinding localVariableBinding) {
-				List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
-				allTypeRef.add(localVariableBinding.getLocalVariableDeclaration().getSpecificTypeRef().getTypeRef());
+			List<Reference> find(LocalVariableBinding localVariableBinding) {
+				List<Reference> allTypeRef = new ArrayList<Reference>();
+				allTypeRef.add(localVariableBinding.getLocalVariableDeclaration().getQualifiedReference().getReference());
 				if(localVariableBinding.isList()){
 					allTypeRef.addAll(find(localVariableBinding.getNext()));
 				}
 				return allTypeRef;
 			}
 		}
-		List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
+		List<Reference> allTypeRef = new ArrayList<Reference>();
 		LineStatement lineStatement = (LineStatement) lookUp(context, new LineStatementCriteria());
 		if (lineStatement != null && lineStatement.getLocalVariableBinding()!= null) {
 			allTypeRef.addAll(new LocalVariableBindingFinder().find(lineStatement.getLocalVariableBinding()));
@@ -196,8 +196,8 @@ public class Finder {
 		return allState;
 	}
 
-	public static List<TypeRef> allAssociation(EObject context, Association excluded) {
-		List<TypeRef> allTypeRef = new ArrayList<TypeRef>();
+	public static List<Reference> allAssociation(EObject context, Association excluded) {
+		List<Reference> allTypeRef = new ArrayList<Reference>();
 		Entity entity = (Entity) lookUp(context, new EntityCriteria());
 		if (entity != null) {
 			for(Association association : entity.getAllAssociation()){
@@ -205,7 +205,7 @@ public class Finder {
 					if(excluded.equals(association)) 
 						continue;
 				}
-				allTypeRef.add(association.getSpecificTypeRef().getTypeRef());
+				allTypeRef.add(association.getQualifiedReference().getReference());
 			}
 		}
 		return allTypeRef;

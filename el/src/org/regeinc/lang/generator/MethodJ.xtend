@@ -1,13 +1,14 @@
 package org.regeinc.lang.generator
 
 import org.regeinc.lang.el.Argument
-import org.regeinc.lang.el.DotMethodCall
 import org.regeinc.lang.el.MethodBody
 import org.regeinc.lang.el.MethodCall
 import org.regeinc.lang.el.MethodDeclaration
 import org.regeinc.lang.el.MethodDefinition
-import org.regeinc.lang.el.OperatorCall
 import org.regeinc.lang.el.Parameter
+
+import static extension org.regeinc.lang.generator.MethodJ.*
+import org.regeinc.lang.el.DotMethodCall
 
 class MethodJ {
 	private new(){		
@@ -24,38 +25,40 @@ class MethodJ {
 		methodDeclaration.name»(«IF methodDeclaration.parameter!=null»«compile(methodDeclaration.parameter)»«ENDIF»)'''
 	
 	def compile(Parameter parameter)'''
-		«IF parameter.specificTypeRef.orTypePrefix!=null»«new SpecificTypeRefJ(parameter.specificTypeRef.typeRef.name).applyConstraint(parameter.specificTypeRef.orTypePrefix)»«ENDIF»'''
+		«parameter.qualifiedReference.reference.type.name» «parameter.qualifiedReference.reference.name» «IF parameter.list»,«compile(parameter)»«ENDIF»'''
 	
 	def compile(MethodDefinition methodDefinition)'''
 		«IF methodDefinition.visibility!=null»«methodDefinition.visibility.toString» «ENDIF»«IF methodDefinition.FINAL»final «
 		ELSEIF methodDefinition.ABSTRACT»abstract «ENDIF»«compile(methodDefinition.methodDeclaration)»«IF methodDefinition.methodBody!=null»{
-			«IF methodDefinition.constraint!=null»«ConditionJ::instance.applyConstraint(methodDefinition.constraint.orCondition)»«ENDIF»
-			«IF methodDefinition.methodDeclaration.parameter!=null»«prefix(methodDefinition.methodDeclaration.parameter)»«ENDIF»
+			«IF methodDefinition.constraint!=null»«ConditionJ::instance.applyConstraint(methodDefinition.constraint.condition)»«ENDIF»
+			«IF methodDefinition.methodDeclaration.parameter!=null»«
+				IF methodDefinition.methodDeclaration.parameter.qualifiedReference.typePrefix!=null»«
+					new TypePrefixJ(methodDefinition.methodDeclaration.parameter.qualifiedReference.reference.name)
+						.applyConstraint(methodDefinition.methodDeclaration.parameter.qualifiedReference.typePrefix)»«
+				ENDIF»«
+			ENDIF»
 			«compile(methodDefinition.methodBody)»
 		}«ELSE»;«ENDIF»
 	'''
 
 	def prefix(Parameter parameter)'''
-		«parameter.specificTypeRef.typeRef.type.name» «parameter.specificTypeRef.typeRef.name» «IF parameter.list»,«compile(parameter)»«ENDIF»'''
+		«IF parameter.qualifiedReference.typePrefix!=null»«
+			new TypePrefixJ(parameter.qualifiedReference.reference.name).applyConstraint(parameter.qualifiedReference.typePrefix)»«ENDIF»'''
 	
 	def compile(MethodBody methodBody)'''
-		«IF !methodBody.allStatement.nullOrEmpty»
-			«FOR statement:methodBody.allStatement»
-				«IF statement.blockStatement!=null»«BlockStatementJ::instance.compile(statement.blockStatement)»«
-				ELSEIF statement.lineStatement!=null»«LineStatementJ::instance.compile(statement.lineStatement)»«ENDIF»«ENDFOR»«ENDIF»'''
+		«IF !methodBody.allStatement.nullOrEmpty»«
+		FOR statement:methodBody.allStatement»«
+			IF statement.blockStatement!=null»«BlockStatementJ::instance.compile(statement.blockStatement)»«
+				ELSEIF statement.lineStatement!=null»«LineStatementJ::instance.compile(statement.lineStatement)»«ENDIF»
+		«ENDFOR»«ENDIF»'''
 
 	def compile(MethodCall methodCall)'''
 		«methodCall.methodDeclaration.name»(«IF methodCall.argument!=null»«compile(methodCall.argument)»«ENDIF»)'''	
 
 	def compile(Argument argument)'''
-		«InstanceJ::instance.compile(argument.instance)»«IF argument.list», «compile(argument.next)»«ENDIF»'''
-
+		«ExpressionJ::instance.compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''	
+	
 	def compile(DotMethodCall dotMethodCall)'''
-		.«compile(dotMethodCall.methodCall)»«
-		IF dotMethodCall.dotMethodCall!=null»«compile(dotMethodCall.dotMethodCall)»«
-		ELSEIF dotMethodCall.operatorCall!=null»«compile(dotMethodCall.operatorCall)»«ENDIF»'''	
-	
-	def compile(OperatorCall operatorCall)''' '''
-	
+		.«compile(dotMethodCall.methodCall)»«IF dotMethodCall.dotMethodCall!=null»«compile(dotMethodCall.dotMethodCall)»«ENDIF»'''	
 		
 }

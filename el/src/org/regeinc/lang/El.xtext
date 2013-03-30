@@ -13,7 +13,7 @@ Element:
 Package:
 	'package' name=QualifiedName ';';
 
-/**
+	/**
  * check: warning on duplicate
  */
 Import:
@@ -31,7 +31,7 @@ enum Visibility:
 Type:
 	Contract | Entity;
 
-/**
+	/**
  * check: error on usage of keyword as name
  * check: error on duplicate
  * check: error on extending self
@@ -45,7 +45,7 @@ Contract:
 	(allMethodDeclaration+=MethodDeclaration ';')*
 	'}';
 
-/**
+	/**
  * check: error on usage of keyword as name
  * check: error on duplicate
  * check: error on coexistence of abstract and final
@@ -56,10 +56,12 @@ Contract:
 Entity:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID (EXTENDS?='extends'
 	type=[Type|QualifiedName])? (IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (','
-	allContract+=[Contract|QualifiedName])*)? '{' (allMethodDefinition+=MethodDefinition | allAssociation+=Association |
-	allState+=State)* '}';
+	allContract+=[Contract|QualifiedName])*)?
+	'{'
+	(allMethodDefinition+=MethodDefinition | allAssociation+=Association | allState+=State)*
+	'}';
 
-/**
+	/**
  * check: error on usage of keyword as name
  * check: error on duplicate State
  * check: error on cyclic reference to self
@@ -67,16 +69,16 @@ Entity:
 State:
 	'state' name=ID constraint=Constraint? ';';
 
-/**
+	/**
  * check: error on usage of keyword as name
  * check: error on initializing with different Type
  * check: error on duplicate Association
  */
 Association:
 	visibility=Visibility? IDENTITY?='identity'?
-	specificTypeRef=SpecificTypeRef (constraint=Constraint | (INITIALIZED?='=' instance=Instance))? ';';
+	qualifiedReference=QualifiedReference (constraint=Constraint | (INITIALIZED?='=' expression=Expression))? ';';
 
-/**
+	/**
  * check: error on usage of keyword as name
  * check: error on usage of containing Type's name
  * check: error on duplicate MethodDeclaration
@@ -84,38 +86,35 @@ Association:
 MethodDeclaration:
 	returnType=[Type|QualifiedName]? name=ID '(' (parameter=Parameter)? ')';
 
-/**
+	/**
  * check: error on usage of keyword as name
  */
 Parameter:
-	specificTypeRef=SpecificTypeRef (list?=',' next=Parameter)?;
+	qualifiedReference=QualifiedReference (list?=',' next=Parameter)?;
 
-/**
+	/**
  * check: error on usage of keyword as name
  */
-SpecificTypeRef:
-	orTypePrefix=OrTypePrefix? typeRef=TypeRef;
+QualifiedReference:
+	typePrefix=TypePrefix? reference=Reference;
 
-/**
+	/**
  * check: error on usage of keyword as name
  */
-TypeRef:
+Reference:
 	FINAL?='final'? NOTNULL?='notnull'? type=[Type|QualifiedName] name=ID;
 
-OrTypePrefix:
-	andTypePrefix=AndTypePrefix ('||' orTypePrefix=OrTypePrefix)?;
-
-AndTypePrefix:
-	notTypePrefix=NotTypePrefix ('&&' andTypePrefix=AndTypePrefix)?;
-
-NotTypePrefix:
-	NOT?='!'? typePrefix=TypePrefix;
-
 TypePrefix:
-	type=[Type|QualifiedName]
-	| '(' orTypePrefix=OrTypePrefix ')';
+	andPrefix=AndPrefix ('||' typePrefix=TypePrefix)?;
 
-/**
+AndPrefix:
+	notPrefix=NotPrefix ('&&' andPrefix=AndPrefix)?;
+
+NotPrefix:
+	NOT?='!'? (type=[Type|QualifiedName]
+	| '(' typePrefix=TypePrefix ')');
+
+	/**
  * check: error on usage of keyword as name
  * check: error on coexistence of abstract and final
  * check: error on duplicate MethodDefinition
@@ -125,28 +124,38 @@ MethodDefinition:
 	methodDeclaration=MethodDeclaration (UNDEFINED?=';' | (constraint=Constraint? methodBody=MethodBody));
 
 Constraint:
-	'onlyif' orCondition=OrCondition;
+	'onlyif' condition=Condition;
 
-OrCondition:
-	andCondition=AndCondition ('||' orCondition=OrCondition)?;
+Condition:
+	andCondition=AndCondition (OR?='||' condition=Condition)?;
 
 AndCondition:
-	notCondition=NotCondition ('&&' andCondition=AndCondition)?;
+	notCondition=NotCondition (AND?='&&' andCondition=AndCondition)?;
 
 NotCondition:
-	NOT?='!'? condition=Condition;
+	NOT?='!'? (comparison=Comparison | (=> '(' groupCondition=Condition ')'));
 
-/**
- * check: error on usage of non boolean type instance
+	/**
+ * check: error on usage of non boolean Expression
  * scope: all State, all Association, all Parameter 
  * scope: all public Association.Association, all Association.State, all public Parameter.Association, all Parameter.State 
  */
-Condition:
-	instance=Instance
-	| groupCondition=GroupCondition;
+Comparison:
+	(expression=Expression (stateComparison=StateComparison | typeComparison=TypeComparison |
+	associativeComparison=AssociativeComparison)?);
 
-GroupCondition:
-	'(' orCondition=OrCondition ')';
+StateComparison:
+	IS?='is' state=[State|QualifiedName];
+
+TypeComparison:
+	TYPEOF?='instanceof' type=[Type|QualifiedName];
+
+AssociativeComparison:
+	comparator=Comparator expression=Expression;
+
+enum Comparator:
+	EQUAL='==' | NOTEQUAL='!=' | LESSTHAN='<' | GREATERTHAN='>' | LESSTHANOREQUAL='<=' | GREATERTHANOREQUAL='>=' |
+	IN='in';
 
 MethodBody:
 	{MethodBody}
@@ -154,6 +163,9 @@ MethodBody:
 	allStatement+=Statement*
 	'}';
 
+	/**
+ * check: error on absence of LineStatement for NON void methods
+ */
 Statement:
 	blockStatement=BlockStatement
 	| lineStatement=LineStatement;
@@ -164,22 +176,22 @@ BlockStatement:
 	| guardBlock=Guard;
 
 If:
-	'if' orCondition=OrCondition methodBody=MethodBody elseBlock=Else?;
+	'if' condition=Condition methodBody=MethodBody elseBlock=Else?;
 
 Else:
 	'else' (ifCondition=If | methodBody=MethodBody);
 
 While:
-	'while' orCondition=OrCondition methodBody=MethodBody;
+	'while' condition=Condition methodBody=MethodBody;
 
-/**
+	/**
  * check: error on usage of typeRef other than instanceof Guard  
  */
 Guard:
-	typeRef=[TypeRef] 'guarded' allEntity+=[Entity|QualifiedName] (',' allEntity+=[Entity|QualifiedName])*
+	reference=[Reference] 'guarded' allEntity+=[Entity|QualifiedName] (',' allEntity+=[Entity|QualifiedName])*
 	methodBody=MethodBody;
 
-/**
+	/**
  * scope: let expression not allowed outside of containing LineStatement
  */
 LineStatement:
@@ -190,7 +202,7 @@ LocalVariableBinding:
 	localVariableDeclaration=LocalVariableDeclaration (list?=',' next=LocalVariableBinding)?;
 
 LocalVariableDeclaration:
-	specificTypeRef=SpecificTypeRef '=' instance=Instance;
+	qualifiedReference=QualifiedReference '=' expression=Expression;
 
 DoWhere:
 	doIf=DoIf (CONTEXTUAL?='where' where=Where)?;
@@ -198,37 +210,66 @@ DoWhere:
 Where:
 	clause=Clause (NESTED?='and' where=Where)?;
 
-/**
+	/**
  * check: error on usage of instance other than instanceof List
  */
 Clause:
-	(typeRef=TypeRef 'from' instance=Instance) // only list instance
-	| orCondition=OrCondition;
+	(=> reference=Reference 'from' expression=Expression) // only list instance
+	| condition=Condition;
 
 DoIf:
 	instruction=Instruction (CONDITIONAL?='provided' provided=Provided)?;
 
 Provided:
-	orCondition=OrCondition (ALTERNATE?='otherwise' doIf=DoIf)?;
+	condition=Condition (ALTERNATE?='otherwise' doIf=DoIf)?;
 
-/**
+	/**
  * check: error on usage of passive Instance in isolation
+ * check: error on usage of MOVE when rExpression is not a value
+ * check: error on usage of COPY when LHS.Type != RHS.Type
  */
 Instruction:
-	((((specificTypeRef=SpecificTypeRef | typeRef=[TypeRef]) ASSIGNMENT?='=') | PRINT?='print' | RETURN?='return')?
-	instance=Instance) | (BREAK?='break' | CONTINUE?='continue');
+	BREAK?='break'
+	| CONTINUE?='continue'
+	| (((reference=[Reference|QualifiedName] (COPY?='=' | MOVE?='=~'))
+	| (RETURN?='return' | PRINT?='print'))? expression=Expression);
 
-/**
+	/**
  * check: error on trying to access state.property
- * scope: all public Association as referredStateOrVariable upon referred by typeRef
  */
-Instance:
-	((stateOrVariable=[StateOrVariable|ID] (=> '.' referredStateOrVariable=[StateOrVariable|ID])?)
-	| literal=Literal | newInstance=NewInstance | listInstance=ListInstance) (dotMethodCall=DotMethodCall |
-	operatorCall=OperatorCall)?;
+Expression:
+	division=Division (ASTERIX?='*' expression=Expression)?;
 
-StateOrVariable:
-	TypeRef | State;
+Division:
+	addition=Addition (PERCENT?='%' division=Division)?;
+
+Addition:
+	substraction=Substraction (PLUS?='+' addition=Addition)?;
+
+Substraction:
+	(instance=Instance | ('(' groupExpression=Expression ')')) (HYPHEN?='-' substraction=Substraction)?;
+
+Instance:
+	(stateOrReference=[StateOrReference|ID] | literal=Literal | newInstance=NewInstance | listInstance=ListInstance)
+	(dotMethodCall=DotMethodCall)?;
+
+StateOrReference:
+	State | Reference;
+
+DotMethodCall:
+	'.' methodCall=MethodCall (dotMethodCall=DotMethodCall)?;
+
+MethodCall:
+	methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')';
+
+Argument:
+	expression=Expression (list?=',' next=Argument)?;
+
+Literal:
+	THIS='this' | TRUE='true' | FALSE='false' | NULL='null' | number=DECIMAL_LITERAL | string=STRING;
+
+DECIMAL_LITERAL:
+	integer=INT ((=> PERIOD?='.' fraction=INT (FLOATING?=('f' | 'F'))?) | TOOLONG?=('l' | 'L'))?;
 
 ListInstance:
 	{ListInstance} ('[' argument=Argument? ']');
@@ -237,28 +278,4 @@ NewInstance:
 	'new' entity=[Entity|QualifiedName] '(' argument=Argument? ')' (=> '{' allNestedInstance+=NestedInstance+ '}')?;
 
 NestedInstance:
-	specificTypeRef=[SpecificTypeRef|QualifiedName] '=' instance=Instance ';';
-
-MethodCall:
-	methodDeclaration=[MethodDeclaration|QualifiedName] '(' argument=Argument? ')';
-
-DotMethodCall:
-	'.' methodCall=MethodCall (dotMethodCall=DotMethodCall | operatorCall=OperatorCall)?;
-
-Argument:
-	instance=Instance (list?=',' next=Argument)?;
-
-OperatorCall:
-	=> operator=Operator instance=Instance (operatorCall=OperatorCall)?;
-
-enum Operator:
-	ADD='+' | SUBSTRACT='-' | MULTIPLY='*' | DIVISION='%' | SAME='==' | NOTSAME='!=' | GREATERTHAN='>' |
-	LESSTHAN='<' | LESSTHANOREQUALTO='<=' | GREATERTHANOREQUALTO='>=' | ONEOF='oneof' | IS='is' | HAS='has' |
-	TYPEOF='instanceof';
-
-Literal:
-	THIS='this' | TRUE='true' | FALSE='false' | NULL='null' | number=DECIMAL_LITERAL | string=STRING;
-
-DECIMAL_LITERAL:
-	integer=INT ((PERIOD?='.' fraction=INT (FLOATING?=('f' | 'F'))?) | TOOLONG?=('l' | 'L'))?;
-
+	qualifiedReference=[QualifiedReference|QualifiedName] '=' expression=Expression ';';

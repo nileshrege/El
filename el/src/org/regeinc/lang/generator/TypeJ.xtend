@@ -46,7 +46,7 @@ class TypeJ {
 			«FOR state:entity.allState»
 
 			public boolean is«state.name.toFirstUpper»(){
-				«IF state.constraint!=null»return «ConditionJ::instance.compile(state.constraint.orCondition)»;«ELSE»return true;«ENDIF»
+				«IF state.constraint!=null»return «ConditionJ::instance.compile(state.constraint.condition)»;«ELSE»return true;«ENDIF»
 			}
 			«ENDFOR»
 		«ENDIF»

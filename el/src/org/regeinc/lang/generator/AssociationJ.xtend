@@ -2,7 +2,7 @@ package org.regeinc.lang.generator
 
 import org.regeinc.lang.el.Association
 import org.regeinc.lang.el.Entity
-import org.regeinc.lang.el.SpecificTypeRef
+import org.regeinc.lang.el.QualifiedReference
 
 class AssociationJ {
 	private new(){		
@@ -16,7 +16,7 @@ class AssociationJ {
 	
 	def compile(Association association)'''
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
-		»«association.specificTypeRef.typeRef.type.name» «association.specificTypeRef.typeRef.name»;
+		»«association.qualifiedReference.reference.type.name» «association.qualifiedReference.reference.name»;
 		«getter(association)»
 		«setter(association)»
 		«builder(association)»
@@ -25,36 +25,36 @@ class AssociationJ {
 	def getter(Association association)'''
 		
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
-		»«association.specificTypeRef.typeRef.type.name» get«association.specificTypeRef.typeRef.name.toFirstUpper»(){
-			return this.«association.specificTypeRef.typeRef.name»;
+		»«association.qualifiedReference.reference.type.name» get«association.qualifiedReference.reference.name.toFirstUpper»(){
+			return this.«association.qualifiedReference.reference.name»;
 		}
 	'''
 
 	def setter(Association association)'''
 		
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
-		»void set«association.specificTypeRef.typeRef.name.toFirstUpper»(«association.specificTypeRef.typeRef.type.name» «association.specificTypeRef.typeRef.name»){
-			«IF association.specificTypeRef.typeRef.NOTNULL»«compileNotNullPrefix(association.specificTypeRef)»«ENDIF»
-			«IF association.specificTypeRef.orTypePrefix!=null»«new SpecificTypeRefJ(association.specificTypeRef.typeRef.name).applyConstraint(association.specificTypeRef.orTypePrefix)»«ENDIF»
-			«IF association.constraint!=null»«ConditionJ::instance.compile(association.constraint.orCondition)»«ENDIF»
-			this.«association.specificTypeRef.typeRef.name» = «association.specificTypeRef.typeRef.name»;
+		»void set«association.qualifiedReference.reference.name.toFirstUpper»(«association.qualifiedReference.reference.type.name» «association.qualifiedReference.reference.name»){
+			«IF association.qualifiedReference.reference.NOTNULL»«compileNotNullPrefix(association.qualifiedReference)»«ENDIF»
+			«IF association.qualifiedReference.typePrefix!=null»«new TypePrefixJ(association.qualifiedReference.reference.name).applyConstraint(association.qualifiedReference.typePrefix)»«ENDIF»
+			«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition)»«ENDIF»
+			this.«association.qualifiedReference.reference.name» = «association.qualifiedReference.reference.name»;
 		}
 	'''
 
 	def builder(Association association)'''
 		
-		«IF association.visibility!=null»«association.visibility.toString» «ENDIF»«(association.eContainer as Entity).name» with«association.specificTypeRef.typeRef.name.toFirstUpper»(«association.specificTypeRef.typeRef.type.name» «association.specificTypeRef.typeRef.name»){
-			«IF association.specificTypeRef.typeRef.NOTNULL»«compileNotNullPrefix(association.specificTypeRef)»«ENDIF»
-			«IF association.specificTypeRef.orTypePrefix!=null»«»«ENDIF»
+		«IF association.visibility!=null»«association.visibility.toString» «ENDIF»«(association.eContainer as Entity).name» with«association.qualifiedReference.reference.name.toFirstUpper»(«association.qualifiedReference.reference.type.name» «association.qualifiedReference.reference.name»){
+			«IF association.qualifiedReference.reference.NOTNULL»«compileNotNullPrefix(association.qualifiedReference)»«ENDIF»
+			«IF association.qualifiedReference.typePrefix!=null»«»«ENDIF»
 			«IF association.constraint!=null»«»«ENDIF»
-			this.«association.specificTypeRef.typeRef.name» = «association.specificTypeRef.typeRef.name»;
+			this.«association.qualifiedReference.reference.name» = «association.qualifiedReference.reference.name»;
 			return this;
 		}'''
 
-	def compileNotNullPrefix(SpecificTypeRef specificTypeRef)'''
+	def compileNotNullPrefix(QualifiedReference qualifiedReference)'''
 		
-		if(«specificTypeRef.typeRef.name» == null){
-			throw new IllegalArgumentException("a null value could not be assigned to a notnull declared field «specificTypeRef.typeRef.name»");
+		if(«qualifiedReference.reference.name» == null){
+			throw new IllegalArgumentException("a null value could not be assigned to a notnull declared field «qualifiedReference.reference.name»");
 		}
 	'''	
 }

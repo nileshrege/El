@@ -6,10 +6,10 @@ import java.util.List;
 import org.eclipse.xtext.validation.Check;
 import org.regeinc.lang.el.Association;
 import org.regeinc.lang.el.Contract;
-import org.regeinc.lang.el.DotMethodCall;
 import org.regeinc.lang.el.ElPackage;
 import org.regeinc.lang.el.Element;
 import org.regeinc.lang.el.Entity;
+import org.regeinc.lang.el.Expression;
 import org.regeinc.lang.el.Import;
 import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LocalVariableDeclaration;
@@ -17,8 +17,8 @@ import org.regeinc.lang.el.MethodDeclaration;
 import org.regeinc.lang.el.MethodDefinition;
 import org.regeinc.lang.el.Model;
 import org.regeinc.lang.el.Parameter;
+import org.regeinc.lang.el.Reference;
 import org.regeinc.lang.el.Type;
-import org.regeinc.lang.el.TypeRef;
 import org.regeinc.lang.util.Finder;
 
 /**
@@ -47,13 +47,19 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	
 	@Check
 	public void checkStateCyclicReferenceToSelf(org.regeinc.lang.el.State state){
-		if(state.getConstraint()!=null){
-			if (state.getConstraint().getOrCondition().getAndCondition()
-					.getNotCondition().getCondition().getInstance()
-					.getStateOrVariable() instanceof org.regeinc.lang.el.State) {
-				
-				org.regeinc.lang.el.State referred = (org.regeinc.lang.el.State)state.getConstraint().getOrCondition().getAndCondition()
-						.getNotCondition().getCondition().getInstance().getStateOrVariable();
+		if (state.getConstraint() != null
+				&& state.getConstraint().getCondition().getAndCondition().getNotCondition()
+						.getComparison().getExpression().getDivision().getAddition().getSubstraction().getInstance()
+						.getStateOrReference() != null) {
+
+			if (state.getConstraint().getCondition().getAndCondition().getNotCondition()
+					.getComparison().getExpression().getDivision().getAddition().getSubstraction().getInstance()
+					.getStateOrReference() instanceof org.regeinc.lang.el.State) {
+
+				org.regeinc.lang.el.State referred = (org.regeinc.lang.el.State) state
+						.getConstraint().getCondition().getAndCondition().getNotCondition()
+						.getComparison().getExpression().getDivision().getAddition().getSubstraction().getInstance()
+						.getStateOrReference();
 				
 				if(state.equals(referred)){
 					error("a state can not refer to its own state", ElPackage.eINSTANCE.eContainingFeature());
@@ -69,7 +75,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 			if(association.equals(nextAssociation)){
 				continue;
 			}else{
-				if(association.getSpecificTypeRef().getTypeRef().getName().equals(nextAssociation.getSpecificTypeRef().getTypeRef().getName())){
+				if(association.getQualifiedReference().getReference().getName().equals(nextAssociation.getQualifiedReference().getReference().getName())){
 					error("duplicate association", ElPackage.eINSTANCE.eContainingFeature());
 					break;
 				}
@@ -135,8 +141,8 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	}
 
 	boolean isSameParameter(Parameter first, Parameter second){
-		Type firstType = first.getSpecificTypeRef().getTypeRef().getType();
-		Type secondType = second.getSpecificTypeRef().getTypeRef().getType(); 
+		Type firstType = first.getQualifiedReference().getReference().getType();
+		Type secondType = second.getQualifiedReference().getReference().getType(); 
 		if(isSameType(firstType, secondType)){
 			if(first.isList() && second.isList()){
 				return isSameParameter(first.getNext(), second.getNext());
@@ -170,15 +176,15 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 					|| !(isOfType(methodDefinition.getMethodDeclaration().getReturnType().getType(),(Type)methodDefinition.eContainer()))){
 				error("instance method must return instance of the enclosing class or subclass", ElPackage.eINSTANCE.eContainingFeature());
 			}
-			List<TypeRef> identities = identities(((Entity)methodDefinition.eContainer()).getAllAssociation());
+			List<Reference> identities = identities(((Entity)methodDefinition.eContainer()).getAllAssociation());
 			if(identities.size()>0 && methodDefinition.getMethodDeclaration().getParameter() == null){
 				error("instance method must declare all identity fields", ElPackage.eINSTANCE.eContainingFeature());
 			}else{
-				List<TypeRef> result = new ArrayList<TypeRef>();
+				List<Reference> result = new ArrayList<Reference>();
 				result.addAll(identities);
-				for(TypeRef identity : identities){
+				for(Reference identity : identities){
 					Parameter param = methodDefinition.getMethodDeclaration().getParameter();
-					if(param.getSpecificTypeRef().getTypeRef().getType().getName().equals(identity.getType().getName())){
+					if(param.getQualifiedReference().getReference().getType().getName().equals(identity.getType().getName())){
 						result.remove(identity);
 					}
 				}
@@ -204,11 +210,11 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 		return flag;
 	}
 	
-	List<TypeRef> identities(List<Association> associationList){
-		List<TypeRef> identityList = new ArrayList<TypeRef>();
+	List<Reference> identities(List<Association> associationList){
+		List<Reference> identityList = new ArrayList<Reference>();
 		for(Association association: associationList){
 			if(association.isIDENTITY()){
-				identityList.add(association.getSpecificTypeRef().getTypeRef());
+				identityList.add(association.getQualifiedReference().getReference());
 			}
 		}
 		return identityList;
@@ -226,12 +232,12 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	}
 	
 	boolean isSpecificTypeParam(Parameter parameter){
-		if(parameter.getSpecificTypeRef().getOrTypePrefix()==null && parameter.isList()){
+		if(parameter.getQualifiedReference().getTypePrefix()==null && parameter.isList()){
 			return isSpecificTypeParam(parameter.getNext());
 		}
 		return false;
 	}
-	
+
 	@Check
 	public void checkAbstractMethodsNotDeclaredPrivate(MethodDefinition methodDefinition){
 		if(!(methodDefinition.eContainer() instanceof Contract)){
@@ -245,39 +251,45 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	
 	@Check
 	public void checkTypeMatches(LocalVariableDeclaration localVariableDeclaration){
-		Type lhs = localVariableDeclaration.getSpecificTypeRef().getTypeRef().getType();
-		Type rhs = instanceType(localVariableDeclaration.getInstance());
-
-		Element element = (Element)lhs.eContainer();
-		String lhsn = element.getPkg()+"."+lhs.getName();
-		String rhsn = element.getPkg()+"."+rhs.getName();
-		if(!lhsn.equals(rhsn)){
+		Type lhs = localVariableDeclaration.getQualifiedReference().getReference().getType();
+		Type rhs = instanceType(getInstance(localVariableDeclaration.getExpression()));
+		if(lhs!=null && rhs!=null){
+			Element element = (Element)lhs.eContainer();
+			String lhsn = element.getPkg()+"."+lhs.getName();
+			String rhsn = element.getPkg()+"."+rhs.getName();
+			if(!lhsn.equals(rhsn)){
+				error("type mismatch", ElPackage.eINSTANCE.eContainingFeature());
+			}	
+		}else{
 			error("type mismatch", ElPackage.eINSTANCE.eContainingFeature());
+		}
+	}
+
+	Instance getInstance(Expression expression){
+		if(expression.getExpression()==null){
+			return expression.getDivision().getAddition().getSubstraction().getInstance();
+		}else{
+			return getInstance(expression.getExpression());
 		}
 	}
 	
 	Type instanceType(Instance instance){
 		Type result = null;
-		if(instance.getDotMethodCall()!=null){
-			MethodDeclaration methodDeclaration = lastMethodCall(instance.getDotMethodCall()).getMethodCall().getMethodDeclaration();
-			if(methodDeclaration.getReturnType()!=null){
-				result = methodDeclaration.getReturnType().getType();
-			}
-		}else if(instance.getStateOrVariable()!=null && instance.getStateOrVariable() instanceof TypeRef){
-			result = ((TypeRef)instance.getStateOrVariable()).getType();
+		if(instance.getStateOrReference()!=null && instance.getStateOrReference() instanceof Reference){
+			result = ((Reference)instance.getStateOrReference()).getType();
 		}else if(instance.getLiteral()!=null){
 			if(instance.getLiteral().getTHIS()!=null){
 				result = Finder.type(instance);
 			}
-		}
+		}else if(instance.getListInstance()!=null){
+			// TODO
+		}else if(instance.getNewInstance()!=null){
+			result = instance.getNewInstance().getEntity();
+		}else if(instance.getDotMethodCall()!=null){
+			if(instance.getDotMethodCall().getMethodCall().getMethodDeclaration().getReturnType()!=null){
+				result = instance.getDotMethodCall().getMethodCall().getMethodDeclaration().getReturnType();
+			}
+		} 
 		return result;
-	}
-	
-	DotMethodCall lastMethodCall(DotMethodCall dotMethodCall){
-		if(dotMethodCall.getDotMethodCall()!=null){
-			return lastMethodCall(dotMethodCall);
-		}else{
-			return dotMethodCall;
-		}
 	}
 }

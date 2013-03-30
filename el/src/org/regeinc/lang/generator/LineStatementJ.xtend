@@ -29,22 +29,23 @@ class LineStatementJ {
 		«compile(localVariableBinding.localVariableDeclaration)»«IF localVariableBinding.list»«compile(localVariableBinding.next)»«ENDIF»'''	
 
 	def compile(LocalVariableDeclaration localVariableDeclaration)'''
-		«new SpecificTypeRefJ(localVariableDeclaration.specificTypeRef.typeRef.name).applyConstraint(localVariableDeclaration.specificTypeRef.orTypePrefix)»
-		«IF localVariableDeclaration.specificTypeRef.typeRef.NOTNULL»«
-		localVariableDeclaration.specificTypeRef.typeRef.type.name» temp«localVariableDeclaration.specificTypeRef.typeRef.name.toFirstUpper» = «InstanceJ::instance.compile(localVariableDeclaration.instance)»;
-		if(temp«localVariableDeclaration.specificTypeRef.typeRef.name.toFirstUpper» == null){
-			throw new IllegalArgumentException("a null value could not be assigned to a notnull declared field «localVariableDeclaration.specificTypeRef.typeRef.name»");
+		«new TypePrefixJ(localVariableDeclaration.qualifiedReference.reference.name).applyConstraint(localVariableDeclaration.qualifiedReference.typePrefix)»
+		«IF localVariableDeclaration.qualifiedReference.reference.NOTNULL»«
+		localVariableDeclaration.qualifiedReference.reference.type.name» temp«
+			localVariableDeclaration.qualifiedReference.reference.name.toFirstUpper» = «ExpressionJ::instance.compile(localVariableDeclaration.expression)»;
+		if(temp«localVariableDeclaration.qualifiedReference.reference.name.toFirstUpper» == null){
+			throw new IllegalArgumentException("a null value could not be assigned to a notnull declared field «localVariableDeclaration.qualifiedReference.reference.name»");
 		}«ENDIF»
-		«localVariableDeclaration.specificTypeRef.typeRef.type.name» «localVariableDeclaration.specificTypeRef.typeRef.name» = temp«localVariableDeclaration.specificTypeRef.typeRef.name»;
+		«localVariableDeclaration.qualifiedReference.reference.type.name» «localVariableDeclaration.qualifiedReference.reference.name» = temp«localVariableDeclaration.qualifiedReference.reference.name»;
 	'''
 	
 	def compile(DoWhere doWhere)'''
 		«IF doWhere.CONTEXTUAL»«compile(doWhere.where, doWhere.doIf)»«ELSE»«compile(doWhere.doIf)»«ENDIF»'''
 
 	def compile(Clause clause, DoIf doIf)'''
-		«IF clause.typeRef!=null»for(«clause.typeRef.type.name» «clause.typeRef.name» : «InstanceJ::instance.compile(clause.instance)»){
+		«IF clause.reference!=null»for(«clause.reference.type.name» «clause.reference.name» : «ExpressionJ::instance.compile(clause.expression)»){
 			«compile(doIf)»
-		}«ELSEIF clause.orCondition!=null»if(«ConditionJ::instance.compile(clause.orCondition)»){
+		}«ELSEIF clause.condition!=null»if(«ConditionJ::instance.compile(clause.condition)»){
 			«compile(doIf)»
 		}«ENDIF»'''
 
@@ -52,24 +53,14 @@ class LineStatementJ {
 		«IF where.NESTED»«compile(where.where,doIf)»«ELSE»«compile(where.clause,doIf)»«ENDIF»'''
 
 	def compile(DoIf doIf)'''
-		«IF doIf.provided!=null»if(«ConditionJ::instance.compile(doIf.provided.orCondition)»){
+		«IF doIf.provided!=null»if(«ConditionJ::instance.compile(doIf.provided.condition)»){
 			«compile(doIf.instruction)»
 		}«IF doIf.provided.doIf!=null»else «compile(doIf.provided.doIf)»«ENDIF»«
 		ELSE»«compile(doIf.instruction)»«ENDIF»'''
 	
 	def compile(Instruction instruction)'''
-		«IF instruction.BREAK»break
-		«ELSEIF instruction.CONTINUE»continue
-		«ELSEIF instruction.RETURN»return «InstanceJ::instance.compile(instruction.instance)»
-		«ELSEIF instruction.PRINT»System.out.println(«InstanceJ::instance.compile(instruction.instance)»)
-		«ELSEIF instruction.instance!=null»«IF instruction.ASSIGNMENT»
-			«IF instruction.specificTypeRef!=null»
-			«instruction.specificTypeRef.typeRef.type.name» temp«instruction.specificTypeRef.typeRef.name.toFirstUpper» = «InstanceJ::instance.compile(instruction.instance)»;
-			if(temp«instruction.specificTypeRef.typeRef.name.toFirstUpper» == null){
-				throw new IllegalArgumentException("a null value could not be assigned to a notnull declared field «instruction.specificTypeRef.typeRef.name»");
-			}
-			«instruction.specificTypeRef.typeRef.type.name» «instruction.specificTypeRef.typeRef.name» = temp«instruction.specificTypeRef.typeRef.name»;
-			«ELSEIF instruction.typeRef!=null»
-			«instruction.typeRef.name» = «InstanceJ::instance.compile(instruction.instance)»;
-			«ENDIF»«ENDIF»«InstanceJ::instance.compile(instruction.instance)»;«ENDIF»'''
+	«IF instruction.BREAK»break«
+	ELSEIF instruction.CONTINUE»continue«
+	ELSEIF instruction.reference!=null»«instruction.reference.name»«IF instruction.COPY» = «ENDIF»«
+	ELSEIF instruction.RETURN» return «ELSEIF instruction.PRINT» System.out.println(«instruction.expression»)«ENDIF»'''
 }
