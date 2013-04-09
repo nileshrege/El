@@ -8,6 +8,7 @@ import org.regeinc.lang.el.Association;
 import org.regeinc.lang.el.Constraint;
 import org.regeinc.lang.el.Contract;
 import org.regeinc.lang.el.Entity;
+import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LineStatement;
 import org.regeinc.lang.el.LocalVariableBinding;
 import org.regeinc.lang.el.MethodDeclaration;
@@ -70,6 +71,12 @@ class LineStatementCriteria implements Criteria{
 	}
 }
 
+class InstanceCriteria implements Criteria{
+	public boolean isSatisfiedBy(EObject context) {
+		return context instanceof Instance;
+	}
+}
+
 public class Finder {
 	
 	public static EObject lookUp(EObject context, Criteria criteria) {
@@ -98,6 +105,11 @@ public class Finder {
 		return allTypeRef;
 	}
 
+	public static Instance instance(EObject context) {
+		Instance instance = (Instance) lookUp(context, new InstanceCriteria());
+		return instance;
+	}
+	
 	public static MethodDeclaration methodDeclaration(EObject context) {
 		Entity entity = (Entity) lookUp(context, new EntityCriteria());
 		if (entity != null) {

@@ -39,7 +39,7 @@ class ConditionJ {
 		«associativeComparison.comparator» «ExpressionJ::instance.compile(associativeComparison.expression)»'''
 
 	def compile(StateComparison stateComparison)'''
-		.is«stateComparison.state.toString.toFirstUpper»()'''
+		.is«stateComparison.state.name.toString.toFirstUpper»()'''
 		
 	def compile(TypeComparison typeComparison)'''
 		instanceof «typeComparison.type.name»'''

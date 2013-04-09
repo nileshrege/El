@@ -11,8 +11,10 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
-import org.regeinc.lang.el.State;
-import org.regeinc.lang.el.StateOrReference;
+import org.regeinc.lang.el.Instance;
+import org.regeinc.lang.el.MethodDeclaration;
+import org.regeinc.lang.el.Reference;
+import org.regeinc.lang.el.Type;
 import org.regeinc.lang.util.Finder;
 
 /** 
@@ -21,17 +23,46 @@ import org.regeinc.lang.util.Finder;
  *
  */
 public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
-	IScope scope_Instance_stateOrTypeRef(EObject context, EReference reference){
-		List<StateOrReference> allStateOrReference = new ArrayList<StateOrReference>();
-		State state = null;
-		if(context.eContainer() instanceof State){
-			state = (State)context.eContainer();
-		}
-		allStateOrReference.addAll(Finder.allState(context, state));
-		allStateOrReference.addAll(Finder.allAssociation(context, null));
-		allStateOrReference.addAll(Finder.allParameter(context));
+	IScope scope_MethodCall_methodDeclaration(EObject context, EReference eReference){
+		List<MethodDeclaration> allMethodDeclaration = new ArrayList<MethodDeclaration>();
+		Instance instance = Finder.instance(context);
 		
-		IScope iscope = Scopes.scopeFor(allStateOrReference);
+		if(instance !=null){			
+			if(instance.getLiteral()!=null){
+				
+			}else if(instance.getListInstance()!=null){
+				
+			}else if(instance.getNewInstance()!=null){
+				
+			}else if(instance.getReference()!=null){
+				Reference reference = instance.getReference();
+				allMethodDeclaration.addAll(Finder.allMethodDeclaration(reference.getType()));
+			}
+		}
+		IScope iscope = Scopes.scopeFor(allMethodDeclaration);
+		return iscope;
+	}
+	
+	IScope scope_MethodCall_reference(EObject context, EReference eReference){
+		List<Reference> allReference = new ArrayList<Reference>();
+		Instance instance = Finder.instance(context);
+		
+		if(instance !=null){
+			if(instance.getLiteral()!=null){
+				
+			}else if(instance.getListInstance()!=null){
+				
+			}else if(instance.getNewInstance()!=null){
+				
+			}else if(instance.getReference()!=null){
+				Reference reference = instance.getReference();
+				Type type = reference.getType();
+				allReference.addAll(Finder.allLocalVariable(type));
+				allReference.addAll(Finder.allParameter(type));
+				allReference.addAll(Finder.allAssociation(type, null));
+			}
+		}
+		IScope iscope = Scopes.scopeFor(allReference);
 		return iscope;
 	}
 }

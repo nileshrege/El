@@ -8,7 +8,6 @@ import org.regeinc.lang.el.MethodDefinition
 import org.regeinc.lang.el.Parameter
 
 import static extension org.regeinc.lang.generator.MethodJ.*
-import org.regeinc.lang.el.DotMethodCall
 
 class MethodJ { 
 	private new(){		
@@ -53,12 +52,10 @@ class MethodJ {
 		«ENDFOR»«ENDIF»'''
 
 	def compile(MethodCall methodCall)'''
-		«methodCall.methodDeclaration.name»(«IF methodCall.argument!=null»«compile(methodCall.argument)»«ENDIF»)'''	
+		«IF methodCall.reference!=null»get«methodCall.reference.name.toFirstUpper»()«
+		ELSE»«methodCall.methodDeclaration.name»(«IF methodCall.argument!=null»«compile(methodCall.argument)»«ENDIF»)«ENDIF»'''	
 
 	def compile(Argument argument)'''
 		«ExpressionJ::instance.compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''	
-	
-	def compile(DotMethodCall dotMethodCall)'''
-		.«compile(dotMethodCall.methodCall)»«IF dotMethodCall.dotMethodCall!=null»«compile(dotMethodCall.dotMethodCall)»«ENDIF»'''	
 		
 }

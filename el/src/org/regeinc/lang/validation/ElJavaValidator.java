@@ -9,9 +9,7 @@ import org.regeinc.lang.el.Contract;
 import org.regeinc.lang.el.ElPackage;
 import org.regeinc.lang.el.Element;
 import org.regeinc.lang.el.Entity;
-import org.regeinc.lang.el.Expression;
 import org.regeinc.lang.el.Import;
-import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LocalVariableDeclaration;
 import org.regeinc.lang.el.MethodDeclaration;
 import org.regeinc.lang.el.MethodDefinition;
@@ -19,7 +17,6 @@ import org.regeinc.lang.el.Model;
 import org.regeinc.lang.el.Parameter;
 import org.regeinc.lang.el.Reference;
 import org.regeinc.lang.el.Type;
-import org.regeinc.lang.util.Finder;
 
 /**
  * this class checks for
@@ -47,25 +44,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	
 	@Check
 	public void checkStateCyclicReferenceToSelf(org.regeinc.lang.el.State state){
-		if (state.getConstraint() != null
-				&& state.getConstraint().getCondition().getAndCondition().getNotCondition()
-						.getComparison().getExpression().getDivision().getAddition().getSubstraction().getInstance()
-						.getStateOrReference() != null) {
 
-			if (state.getConstraint().getCondition().getAndCondition().getNotCondition()
-					.getComparison().getExpression().getDivision().getAddition().getSubstraction().getInstance()
-					.getStateOrReference() instanceof org.regeinc.lang.el.State) {
-
-				org.regeinc.lang.el.State referred = (org.regeinc.lang.el.State) state
-						.getConstraint().getCondition().getAndCondition().getNotCondition()
-						.getComparison().getExpression().getDivision().getAddition().getSubstraction().getInstance()
-						.getStateOrReference();
-				
-				if(state.equals(referred)){
-					error("a state can not refer to its own state", ElPackage.eINSTANCE.eContainingFeature());
-				}
-			}
-		}
 	}
 	
 	@Check
@@ -251,45 +230,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	
 	@Check
 	public void checkTypeMatches(LocalVariableDeclaration localVariableDeclaration){
-		Type lhs = localVariableDeclaration.getQualifiedReference().getReference().getType();
-		Type rhs = instanceType(getInstance(localVariableDeclaration.getExpression()));
-		if(lhs!=null && rhs!=null){
-			Element element = (Element)lhs.eContainer();
-			String lhsn = element.getPkg()+"."+lhs.getName();
-			String rhsn = element.getPkg()+"."+rhs.getName();
-			if(!lhsn.equals(rhsn)){
-				error("type mismatch", ElPackage.eINSTANCE.eContainingFeature());
-			}	
-		}else{
-			error("type mismatch", ElPackage.eINSTANCE.eContainingFeature());
-		}
+		
 	}
 
-	Instance getInstance(Expression expression){
-		if(expression.getExpression()==null){
-			return expression.getDivision().getAddition().getSubstraction().getInstance();
-		}else{
-			return getInstance(expression.getExpression());
-		}
-	}
-	
-	Type instanceType(Instance instance){
-		Type result = null;
-		if(instance.getStateOrReference()!=null && instance.getStateOrReference() instanceof Reference){
-			result = ((Reference)instance.getStateOrReference()).getType();
-		}else if(instance.getLiteral()!=null){
-			if(instance.getLiteral().getTHIS()!=null){
-				result = Finder.type(instance);
-			}
-		}else if(instance.getListInstance()!=null){
-			// TODO
-		}else if(instance.getNewInstance()!=null){
-			result = instance.getNewInstance().getEntity();
-		}else if(instance.getDotMethodCall()!=null){
-			if(instance.getDotMethodCall().getMethodCall().getMethodDeclaration().getReturnType()!=null){
-				result = instance.getDotMethodCall().getMethodCall().getMethodDeclaration().getReturnType();
-			}
-		} 
-		return result;
-	}
 }

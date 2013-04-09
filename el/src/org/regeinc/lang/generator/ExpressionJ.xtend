@@ -1,20 +1,17 @@
 package org.regeinc.lang.generator
 
+import org.regeinc.lang.el.Addition
 import org.regeinc.lang.el.Argument
 import org.regeinc.lang.el.DECIMAL_LITERAL
+import org.regeinc.lang.el.Division
 import org.regeinc.lang.el.Expression
 import org.regeinc.lang.el.Instance
 import org.regeinc.lang.el.ListInstance
 import org.regeinc.lang.el.Literal
 import org.regeinc.lang.el.NewInstance
+import org.regeinc.lang.el.Substraction
 
 import static extension org.regeinc.lang.generator.ExpressionJ.*
-import org.regeinc.lang.el.StateOrReference
-import org.regeinc.lang.el.State
-import org.regeinc.lang.el.Reference
-import org.regeinc.lang.el.Substraction
-import org.regeinc.lang.el.Addition
-import org.regeinc.lang.el.Division
 
 class ExpressionJ{
 	private new(){		
@@ -35,21 +32,18 @@ class ExpressionJ{
 	def compile(Addition addition)'''
 	«IF addition.substraction!=null»«compile(addition.substraction)»«ENDIF»«IF addition.PLUS» + «compile(addition.addition)»«ENDIF»'''
 	
-	def compile(Substraction  substraction)'''
-	«IF substraction.instance!=null»«compile(substraction.instance)»«
-	ELSEIF substraction.groupExpression!=null»(«compile(substraction.groupExpression)»)«
-	ENDIF»«IF substraction.HYPHEN» - «compile(substraction.substraction)»«ENDIF»'''
+	def compile(Substraction substraction)'''
+		«compile(substraction.instance)»«IF substraction.HYPHEN» - «compile(substraction.substraction)»«ENDIF»'''
 		
 	def compile(Instance instance)'''
-		«IF instance.stateOrReference!=null»«compile(instance.stateOrReference)»«
-		ELSEIF instance.literal!=null»«compile(instance.literal)»«
-		ELSEIF instance.listInstance!=null»«compile(instance.listInstance)»«
-		ELSEIF instance.newInstance!=null»«compile(instance.newInstance)»«ENDIF»«
-		IF instance.dotMethodCall!=null»«MethodJ::instance.compile(instance.dotMethodCall)»«ENDIF»'''
-	 
-	def compile(StateOrReference stateOrReference)'''
-		«IF stateOrReference instanceof State»is«(stateOrReference as State).name.toFirstUpper»()«
-			ELSEIF stateOrReference instanceof Reference»«(stateOrReference as Reference).name»«ENDIF»'''
+		«IF instance.groupExpression!=null»( «compile(instance.groupExpression)» )«
+		ELSE»
+			«IF instance.literal!=null»«compile(instance.literal)»«
+			ELSEIF instance.listInstance!=null»«compile(instance.listInstance)»«
+			ELSEIF instance.reference!=null»«instance.reference.name»«
+			ELSEIF instance.newInstance!=null»«compile(instance.newInstance)»«ENDIF»«
+			IF instance.methodCall!=null».«MethodJ::instance.compile(instance.methodCall)»«ENDIF»«
+		ENDIF»'''
 	
 	def compile(NewInstance newInstance)'''
 		new «newInstance.entity.name»(«IF newInstance.argument!=null»«ENDIF»)«

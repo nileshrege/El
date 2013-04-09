@@ -121,7 +121,7 @@ NotPrefix:
  */
 MethodDefinition:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')?
-	methodDeclaration=MethodDeclaration (UNDEFINED?=';' | (constraint=Constraint? methodBody=MethodBody));
+	methodDeclaration=MethodDeclaration ((constraint=Constraint? methodBody=MethodBody) | UNDEFINED?=';');
 
 Constraint:
 	'onlyif' condition=Condition;
@@ -229,38 +229,49 @@ Provided:
  * check: error on usage of COPY when LHS.Type != RHS.Type
  */
 Instruction:
-	BREAK?='break'
-	| CONTINUE?='continue'
-	| (((reference=[Reference|QualifiedName] (COPY?='=' | MOVE?='=~'))
-	| (RETURN?='return' | PRINT?='print'))? expression=Expression);
+	(BREAK?='break' | CONTINUE?='continue')
+	| (((=> reference=[Reference|QualifiedName] (COPY?='=' | MOVE?='=~')) | (RETURN?='return' | PRINT?='print'))?
+	expression=Expression);
 
 	/**
- * check: error on trying to access state.property
+ * check: error on usage of ASTERIX if LHS is not numeric
  */
 Expression:
 	division=Division (ASTERIX?='*' expression=Expression)?;
 
+	/**
+ * check: error on usage of PERCENT if LHS is not numeric
+ */
 Division:
 	addition=Addition (PERCENT?='%' division=Division)?;
 
+	/**
+ * check: error on usage of PLUS if LHS is not numeric
+ */
 Addition:
 	substraction=Substraction (PLUS?='+' addition=Addition)?;
 
+	/**
+ * check: error on usage of HYPHEN if LHS is not numeric
+ */
 Substraction:
-	(instance=Instance | ('(' groupExpression=Expression ')')) (HYPHEN?='-' substraction=Substraction)?;
+	instance=Instance (HYPHEN?='-' substraction=Substraction)?;
 
+	/**
+ * scope: MethodCall must belong to the LHS of DOT
+ */
 Instance:
-	(stateOrReference=[StateOrReference|ID] | literal=Literal | newInstance=NewInstance | listInstance=ListInstance)
-	(dotMethodCall=DotMethodCall)?;
+	((literal=Literal | newInstance=NewInstance | listInstance=ListInstance | reference=[Reference]) ('.'
+	methodCall=MethodCall)?)
+	| '(' groupExpression=Expression ')';
 
-StateOrReference:
-	State | Reference;
-
-DotMethodCall:
-	'.' methodCall=MethodCall (dotMethodCall=DotMethodCall)?;
-
+	/**
+ * scope: MethodCall must belong to the LHS of DOT
+ */
 MethodCall:
-	methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')';
+	(reference=[Reference]
+	| (=> methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')')) ('.'
+	methodCall=MethodCall)?;
 
 Argument:
 	expression=Expression (list?=',' next=Argument)?;
