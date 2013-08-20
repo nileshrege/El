@@ -31,9 +31,15 @@ class ConditionJ {
 			ELSEIF notCondition.groupCondition!=null»( «compile(notCondition.groupCondition.condition)» )«ENDIF»'''
 	
 	def compile(Comparison comparison)'''
-		«ExpressionJ::instance.compile(comparison.expression)»«IF comparison.associativeComparison!=null»«compile(comparison.associativeComparison)»«
-		ELSEIF comparison.stateComparison!=null»«compile(comparison.stateComparison)»«
-		ELSEIF comparison.typeComparison!=null»«compile(comparison.typeComparison)»«ENDIF»'''
+		«IF comparison.stateComparison!=null»«compile(comparison.stateComparison)»
+		«ELSEIF comparison.typeComparison!=null»«compile(comparison.typeComparison)»
+		«ELSEIF comparison.associativeComparison!=null»«
+			IF comparison.associativeComparison.comparator.toString.equals("in")»«
+				ExpressionJ::instance.compile(comparison.associativeComparison.expression)».contains(«
+					ExpressionJ::instance.compile(comparison.expression)»)«
+			ELSE»«ExpressionJ::instance.compile(comparison.expression)» «compile(comparison.associativeComparison)»«
+			ENDIF»«
+		ENDIF»'''
 
 	def compile(AssociativeComparison associativeComparison)'''
 		«associativeComparison.comparator» «ExpressionJ::instance.compile(associativeComparison.expression)»'''

@@ -54,7 +54,7 @@ class ExpressionJ{
 			ENDIF»'''
 	
 	def compile(ListInstance listInstance)'''
-		java.util.Arrays.asList(«compile(listInstance.argument)»)'''	
+		«IF listInstance.argument !=null»java.util.Arrays.asList(«compile(listInstance.argument)»)«ELSE»new java.util.ArrayList()«ENDIF»'''	
 
 	def compile(Argument argument)'''
 		«compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''

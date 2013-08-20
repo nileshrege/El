@@ -29,7 +29,7 @@ class LineStatementJ {
 		«compile(localVariableBinding.localVariableDeclaration)»«IF localVariableBinding.list»«compile(localVariableBinding.next)»«ENDIF»'''	
 
 	def compile(LocalVariableDeclaration localVariableDeclaration)'''
-		«new TypePrefixJ(localVariableDeclaration.qualifiedReference.reference.name).applyConstraint(localVariableDeclaration.qualifiedReference.typePrefix)»
+		«IF localVariableDeclaration.qualifiedReference.typePrefix !=null»«new TypePrefixJ(localVariableDeclaration.qualifiedReference.reference.name).applyConstraint(localVariableDeclaration.qualifiedReference.typePrefix)»«ENDIF»
 		«IF localVariableDeclaration.qualifiedReference.reference.NOTNULL»«
 		localVariableDeclaration.qualifiedReference.reference.type.name» temp«
 			localVariableDeclaration.qualifiedReference.reference.name.toFirstUpper» = «ExpressionJ::instance.compile(localVariableDeclaration.expression)»;
