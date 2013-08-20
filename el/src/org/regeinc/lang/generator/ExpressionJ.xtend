@@ -68,7 +68,7 @@ class ExpressionJ{
 		ELSEIF literal.FALSE!=null»false«ENDIF»'''
 
 	def compile(DECIMAL_LITERAL decimal)'''
-		«IF decimal.integer!=null»«decimal.integer»«ENDIF»«
+		«decimal.integer»«
 			IF decimal.PERIOD».«decimal.fraction»«IF decimal.FLOATING»f«ENDIF»«ELSEIF decimal.TOOLONG»l«ENDIF»'''
 
 }
