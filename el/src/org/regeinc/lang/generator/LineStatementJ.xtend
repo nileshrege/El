@@ -9,8 +9,6 @@ import org.regeinc.lang.el.LocalVariableBinding
 import org.regeinc.lang.el.LocalVariableDeclaration
 import org.regeinc.lang.el.Where
 
-import static extension org.regeinc.lang.generator.LineStatementJ.*
-
 class LineStatementJ {
 	private new(){		
 	}

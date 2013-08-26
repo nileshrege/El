@@ -7,8 +7,6 @@ import org.regeinc.lang.el.MethodDeclaration
 import org.regeinc.lang.el.MethodDefinition
 import org.regeinc.lang.el.Parameter
 
-import static extension org.regeinc.lang.generator.MethodJ.*
-
 class MethodJ { 
 	private new(){		
 	}

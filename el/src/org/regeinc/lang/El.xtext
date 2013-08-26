@@ -155,7 +155,7 @@ AssociativeComparison:
 
 enum Comparator:
 	EQUAL='==' | NOTEQUAL='!=' | LESSTHAN='<' | GREATERTHAN='>' | LESSTHANOREQUAL='<=' | GREATERTHANOREQUAL='>=' |
-	IN='in';
+	IN='in' | MATCH='?=';
 
 MethodBody:
 	{MethodBody}

@@ -1,8 +1,11 @@
 package org.regeinc.lang.generator
 
+import org.regeinc.lang.el.Association
 import org.regeinc.lang.el.Contract
-import org.regeinc.lang.el.Type
 import org.regeinc.lang.el.Entity
+import org.regeinc.lang.el.Type
+import java.util.List
+import java.util.ArrayList
 
 class TypeJ {
 	private new(){		
@@ -56,6 +59,47 @@ class TypeJ {
 				«MethodJ::instance.compile(methodDefinition)»
 			«ENDFOR»
 		«ENDIF»
+		«constructor(entity)»
+		«equals(entity)»
 	}
 	'''
+	
+	def private constructor(Entity entity)'''
+		«IF !getIdentities(entity).nullOrEmpty»
+		
+		public «entity.name»(«FOR a:getIdentities(entity) SEPARATOR ', ' »«a.qualifiedReference.reference.type.name» «a.qualifiedReference.reference.name»«ENDFOR»){
+			«FOR a:getIdentities(entity)»
+				this.«a.qualifiedReference.reference.name» = «a.qualifiedReference.reference.name»;
+			«ENDFOR»
+		}«ENDIF»
+	'''
+
+	def List<Association> getIdentities(Entity entity){
+		var allAssociation = new ArrayList()
+		for(Association a: entity.allAssociation){
+			if(a.IDENTITY)
+				allAssociation.add(a)
+		}
+		return allAssociation;
+	}
+
+	def equals(Entity entity)'''
+		
+		public boolean equals(Object obj) {
+			if (obj == null){
+				return false;
+			}
+			if (obj == this){
+				return true;
+			}
+			if (!(obj instanceof «entity.name»)){
+				return false;
+			} else{
+				«entity.name» other = («entity.name»)obj;
+				return «FOR a:getIdentities(entity) SEPARATOR ' && '»«
+            		a.qualifiedReference.reference.name».equals(other.get«a.qualifiedReference.reference.name.toFirstUpper»())«ENDFOR»;
+			}
+		}
+	'''
+	
 }

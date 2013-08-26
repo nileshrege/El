@@ -1,14 +1,12 @@
 package org.regeinc.lang.generator
 
 import org.regeinc.lang.el.AndCondition
+import org.regeinc.lang.el.AssociativeComparison
 import org.regeinc.lang.el.Comparison
 import org.regeinc.lang.el.Condition
 import org.regeinc.lang.el.NotCondition
-
-import static extension org.regeinc.lang.generator.ConditionJ.*
-import org.regeinc.lang.el.TypeComparison
 import org.regeinc.lang.el.StateComparison
-import org.regeinc.lang.el.AssociativeComparison
+import org.regeinc.lang.el.TypeComparison
 
 class ConditionJ {
 	private new(){		
@@ -36,6 +34,8 @@ class ConditionJ {
 		«ELSEIF comparison.associativeComparison!=null»«
 			IF comparison.associativeComparison.comparator.toString.equals("in")»«
 				ExpressionJ::instance.compile(comparison.associativeComparison.expression)».contains(«
+					ExpressionJ::instance.compile(comparison.expression)»)«
+			ELSEIF comparison.associativeComparison.comparator.toString.equals("?=")».equals(«
 					ExpressionJ::instance.compile(comparison.expression)»)«
 			ELSE»«ExpressionJ::instance.compile(comparison.expression)» «compile(comparison.associativeComparison)»«
 			ENDIF»«

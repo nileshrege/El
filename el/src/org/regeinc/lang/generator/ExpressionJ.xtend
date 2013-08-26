@@ -11,8 +11,6 @@ import org.regeinc.lang.el.Literal
 import org.regeinc.lang.el.NewInstance
 import org.regeinc.lang.el.Substraction
 
-import static extension org.regeinc.lang.generator.ExpressionJ.*
-
 class ExpressionJ{
 	private new(){		
 	}
