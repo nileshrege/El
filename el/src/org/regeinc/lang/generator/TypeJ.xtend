@@ -68,8 +68,9 @@ class TypeJ {
 		«IF !getIdentities(entity).nullOrEmpty»
 		
 		public «entity.name»(«FOR a:getIdentities(entity) SEPARATOR ', ' »«a.qualifiedReference.reference.type.name» «a.qualifiedReference.reference.name»«ENDFOR»){
-			«FOR a:getIdentities(entity)»
-				this.«a.qualifiedReference.reference.name» = «a.qualifiedReference.reference.name»;
+			«FOR association:getIdentities(entity)»
+				«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition, association.qualifiedReference.reference.name)»«ENDIF»
+				this.«association.qualifiedReference.reference.name» = «association.qualifiedReference.reference.name»;
 			«ENDFOR»
 		}«ENDIF»
 	'''
@@ -86,15 +87,15 @@ class TypeJ {
 	def equals(Entity entity)'''
 		
 		public boolean equals(Object obj) {
-			if (obj == null){
+			if(obj == null){
 				return false;
 			}
-			if (obj == this){
+			if(obj == this){
 				return true;
 			}
-			if (!(obj instanceof «entity.name»)){
+			if(!(obj instanceof «entity.name»)){
 				return false;
-			} else{
+			}else{
 				«entity.name» other = («entity.name»)obj;
 				return «FOR a:getIdentities(entity) SEPARATOR ' && '»«
             		a.qualifiedReference.reference.name».equals(other.get«a.qualifiedReference.reference.name.toFirstUpper»())«ENDFOR»;

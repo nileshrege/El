@@ -35,8 +35,9 @@ class ConditionJ {
 			IF comparison.associativeComparison.comparator.toString.equals("in")»«
 				ExpressionJ::instance.compile(comparison.associativeComparison.expression)».contains(«
 					ExpressionJ::instance.compile(comparison.expression)»)«
-			ELSEIF comparison.associativeComparison.comparator.toString.equals("?=")».equals(«
-					ExpressionJ::instance.compile(comparison.expression)»)«
+			ELSEIF comparison.associativeComparison.comparator.toString.equals("?=")»«
+				ExpressionJ::instance.compile(comparison.expression)».equals(«
+					ExpressionJ::instance.compile(comparison.associativeComparison.expression)»)«
 			ELSE»«ExpressionJ::instance.compile(comparison.expression)» «compile(comparison.associativeComparison)»«
 			ENDIF»«
 		ENDIF»'''
@@ -50,9 +51,9 @@ class ConditionJ {
 	def compile(TypeComparison typeComparison)'''
 		instanceof «typeComparison.type.name»'''
 
-	def applyConstraint(Condition condition)'''
+	def applyConstraint(Condition condition, String context)'''
 		if(!(«compile(condition)»)){
-			throw new IllegalArgumentException("declared constraint not satisfied");
+			throw new IllegalArgumentException("declared constraint on «context» not satisfied");
 		}
 	'''		
 }

@@ -27,7 +27,7 @@ class MethodJ {
 	def compile(MethodDefinition methodDefinition)'''
 		«IF methodDefinition.visibility!=null»«methodDefinition.visibility.toString» «ENDIF»«IF methodDefinition.FINAL»final «
 		ELSEIF methodDefinition.ABSTRACT»abstract «ENDIF»«compile(methodDefinition.methodDeclaration)»«IF methodDefinition.methodBody!=null»{
-			«IF methodDefinition.constraint!=null»«ConditionJ::instance.applyConstraint(methodDefinition.constraint.condition)»«ENDIF»
+			«IF methodDefinition.constraint!=null»«ConditionJ::instance.applyConstraint(methodDefinition.constraint.condition, methodDefinition.methodDeclaration.name)»«ENDIF»
 			«IF methodDefinition.methodDeclaration.parameter!=null»«
 				IF methodDefinition.methodDeclaration.parameter.qualifiedReference.typePrefix!=null»«
 					new TypePrefixJ(methodDefinition.methodDeclaration.parameter.qualifiedReference.reference.name)

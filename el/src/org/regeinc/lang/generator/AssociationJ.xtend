@@ -36,7 +36,7 @@ class AssociationJ {
 		»void set«association.qualifiedReference.reference.name.toFirstUpper»(«association.qualifiedReference.reference.type.name» «association.qualifiedReference.reference.name»){
 			«IF association.qualifiedReference.reference.NOTNULL»«compileNotNullPrefix(association.qualifiedReference)»«ENDIF»
 			«IF association.qualifiedReference.typePrefix!=null»«new TypePrefixJ(association.qualifiedReference.reference.name).applyConstraint(association.qualifiedReference.typePrefix)»«ENDIF»
-			«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition)»«ENDIF»
+			«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition, association.qualifiedReference.reference.name)»«ENDIF»
 			this.«association.qualifiedReference.reference.name» = «association.qualifiedReference.reference.name»;
 		}
 	'''
@@ -51,8 +51,7 @@ class AssociationJ {
 			return this;
 		}'''
 
-	def compileNotNullPrefix(QualifiedReference qualifiedReference)'''
-		
+	def compileNotNullPrefix(QualifiedReference qualifiedReference)'''		
 		if(«qualifiedReference.reference.name» == null){
 			throw new IllegalArgumentException("a null value could not be assigned to a notnull declared field «qualifiedReference.reference.name»");
 		}
