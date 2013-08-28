@@ -282,7 +282,12 @@ DECIMAL_LITERAL:
 	integer=INT ((=> PERIOD?='.' fraction=INT (FLOATING?=('f' | 'F'))?) | TOOLONG?=('l' | 'L'))?;
 
 ListInstance:
-	{ListInstance} ('[' argument=Argument? ']');
+	{ListInstance} ('[' ( select=Select | argument=Argument)? ']');
+
+Select:
+	'select' (DISTINCT?='distinct')? reference=Reference 
+		'from' (listReference=[Reference] | listInstance=ListInstance) 
+			(CLAUSE?='where' condition=Condition)?;
 
 NewInstance:
 	'new' entity=[Entity|QualifiedName] '(' argument=Argument? ')' (=> '{' allNestedInstance+=NestedInstance+ '}')?;

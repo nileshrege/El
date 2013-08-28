@@ -10,6 +10,9 @@ import org.regeinc.lang.el.ListInstance
 import org.regeinc.lang.el.Literal
 import org.regeinc.lang.el.NewInstance
 import org.regeinc.lang.el.Substraction
+import org.regeinc.lang.el.Select
+import org.regeinc.lang.util.Finder
+import org.regeinc.lang.el.Entity
 
 class ExpressionJ{
 	private new(){		
@@ -52,7 +55,23 @@ class ExpressionJ{
 			ENDIF»'''
 	
 	def compile(ListInstance listInstance)'''
-		«IF listInstance.argument !=null»java.util.Arrays.asList(«compile(listInstance.argument)»)«ELSE»new java.util.ArrayList()«ENDIF»'''	
+		«IF listInstance.argument !=null»java.util.Arrays.asList(«compile(listInstance.argument)»)«
+		ELSEIF listInstance.select !=null»«compile(listInstance.select)»«ELSE»new java.util.ArrayList()«ENDIF»'''	
+
+	def compile(Select select)'''
+		«IF select.CLAUSE»
+		new «((Finder::entity(select))as Entity).name»(){
+			public List filter(List originalList){				
+				List<«select.reference.type.name»> all«select.reference.type.name» = new ArrayList<>();
+				for(Iterator<«select.reference.type.name»> it = originalList.iterator(); it.hasNext();){
+					final «select.reference.type.name» «select.reference.name» = it.next();
+					if(«ConditionJ::instance.compile(select.condition)»){
+						all«select.reference.type.name».add(«select.reference.name»);
+					}
+				}
+				return all«select.reference.type.name»;	
+			}	
+		}.filter(«select.listReference.name»)«ELSE»«select.listReference.name»«ENDIF»'''
 
 	def compile(Argument argument)'''
 		«compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''
