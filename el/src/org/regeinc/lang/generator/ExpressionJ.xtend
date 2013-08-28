@@ -10,6 +10,9 @@ import org.regeinc.lang.el.ListInstance
 import org.regeinc.lang.el.Literal
 import org.regeinc.lang.el.NewInstance
 import org.regeinc.lang.el.Substraction
+import org.regeinc.lang.el.Select
+import org.regeinc.lang.util.Finder
+import org.regeinc.lang.el.Entity
 
 class ExpressionJ{
 	private new(){		
@@ -52,7 +55,22 @@ class ExpressionJ{
 			ENDIF»'''
 	
 	def compile(ListInstance listInstance)'''
-		«IF listInstance.argument !=null»java.util.Arrays.asList(«compile(listInstance.argument)»)«ELSE»new java.util.ArrayList()«ENDIF»'''	
+		«IF listInstance.argument !=null»java.util.Arrays.asList(«compile(listInstance.argument)»)«
+		ELSEIF listInstance.select !=null»«compile(listInstance.select)»«ELSE»new java.util.ArrayList()«ENDIF»'''	
+
+	def compile(Select select)'''
+		«IF select.CLAUSE»
+		new «((Finder::entity(select))as Entity).name»(){
+			public List filter(List originalList){
+				List newList = new ArrayList<>();
+				for(Iterator it = originalList.iterator(); it.hasNext();){
+					if(«ConditionJ::instance.compile(select.condition)»){
+						newList.add(it.next());	     
+					}
+				}
+				return newList;
+			}	 
+		}.filter(«select.reference.name»)«ELSE»«select.reference.name»«ENDIF»'''
 
 	def compile(Argument argument)'''
 		«compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''

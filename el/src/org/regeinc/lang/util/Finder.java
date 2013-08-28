@@ -222,4 +222,8 @@ public class Finder {
 		}
 		return allTypeRef;
 	}
+	
+	public static Entity entity(EObject context) {
+		return (Entity) lookUp(context, new EntityCriteria());
+	}
 }
