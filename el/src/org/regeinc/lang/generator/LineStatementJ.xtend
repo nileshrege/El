@@ -57,8 +57,10 @@ class LineStatementJ {
 		ELSE»«compile(doIf.instruction)»«ENDIF»'''
 	
 	def compile(Instruction instruction)'''
-	«IF instruction.BREAK»break«
-	ELSEIF instruction.CONTINUE»continue«
-	ELSEIF instruction.reference!=null»«instruction.reference.name»«IF instruction.COPY» = «ENDIF»«
-	ELSEIF instruction.RETURN» return «ELSEIF instruction.PRINT» System.out.println(«instruction.expression»)«ENDIF»'''
+		«IF instruction.BREAK»break«
+		ELSEIF instruction.CONTINUE»continue«
+		ELSEIF instruction.COPY»«instruction.reference.name» = «
+		ELSEIF instruction.RETURN» return «
+		ELSEIF instruction.PRINT» System.out.println(«instruction.expression»)«
+		ENDIF»'''
 }

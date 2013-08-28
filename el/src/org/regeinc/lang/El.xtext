@@ -230,8 +230,7 @@ Provided:
  */
 Instruction:
 	(BREAK?='break' | CONTINUE?='continue')
-	| (((=> reference=[Reference|QualifiedName] (COPY?='=' | MOVE?='=~')) | (RETURN?='return' | PRINT?='print'))?
-	expression=Expression);
+	| (((=> reference=[Reference|QualifiedName] COPY?='=') | (RETURN?='return' | PRINT?='print'))? expression=Expression);
 
 	/**
  * check: error on usage of ASTERIX if LHS is not numeric
