@@ -20,5 +20,6 @@ Import-Package: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.regeinc.lang.ui.contentassist,
  org.regeinc.lang.ui.contentassist.antlr,
- org.regeinc.lang.ui.internal
+ org.regeinc.lang.ui.internal,
+ org.regeinc.lang.ui.quickfix
 Bundle-Activator: org.regeinc.lang.ui.internal.ElActivator

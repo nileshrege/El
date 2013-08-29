@@ -60,17 +60,18 @@ class ExpressionJ{
 
 	def compile(Select select)'''
 		«IF select.CLAUSE»
-		new «((Finder::entity(select))as Entity).name»(){
-			public List filter(List originalList){
-				List newList = new ArrayList<>();
-				for(Iterator it = originalList.iterator(); it.hasNext();){
+		new java.util.ArrayList<«select.reference.type.name»>(){
+			public List<«select.reference.type.name»> filter(List<«select.reference.type.name»> originalList){				
+				List<«select.reference.type.name»> all«select.reference.type.name» = new ArrayList<>();
+				for(Iterator<«select.reference.type.name»> it = originalList.iterator(); it.hasNext();){
+					final «select.reference.type.name» «select.reference.name» = it.next();
 					if(«ConditionJ::instance.compile(select.condition)»){
-						newList.add(it.next());	     
+						all«select.reference.type.name».add(«select.reference.name»);
 					}
 				}
-				return newList;
-			}	 
-		}.filter(«select.reference.name»)«ELSE»«select.reference.name»«ENDIF»'''
+				return all«select.reference.type.name»;	
+			}	
+		}.filter(«select.listReference.name»)«ELSE»«select.listReference.name»«ENDIF»'''
 
 	def compile(Argument argument)'''
 		«compile(argument.expression)»«IF argument.list», «compile(argument.next)»«ENDIF»'''

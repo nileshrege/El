@@ -285,8 +285,8 @@ ListInstance:
 	{ListInstance} ('[' ( select=Select | argument=Argument)? ']');
 
 Select:
-	'select' (DISTINCT?='distinct')? qualifiedReference=QualifiedReference 
-		'from' (reference=[Reference] | listInstance=ListInstance) 
+	'select' (DISTINCT?='distinct')? reference=Reference 
+		'from' (listReference=[Reference] | listInstance=ListInstance) 
 			(CLAUSE?='where' condition=Condition)?;
 
 NewInstance:
