@@ -5,6 +5,7 @@ import org.regeinc.lang.el.Else
 import org.regeinc.lang.el.Guard
 import org.regeinc.lang.el.If
 import org.regeinc.lang.el.While
+import org.regeinc.lang.el.For
 
 class BlockStatementJ {
 	private new(){		
@@ -18,6 +19,7 @@ class BlockStatementJ {
 	 
 	def compile(BlockStatement blockStatement)'''
 		«IF blockStatement.whileBlock!=null»«compile(blockStatement.whileBlock)»«
+		ELSEIF blockStatement.forBlock!=null»«compile(blockStatement.forBlock)»«
 		ELSEIF blockStatement.ifBlock!=null»«compile(blockStatement.ifBlock)»«
 		ELSEIF  blockStatement.guardBlock!=null»«compile(blockStatement.guardBlock)»«ENDIF»
 	'''
@@ -25,6 +27,21 @@ class BlockStatementJ {
 	def compile(While whyle)'''
 		while(«ConditionJ::instance.compile(whyle.condition)»){
 			«IF whyle.methodBody!=null»«MethodJ::instance.compile(whyle.methodBody)»«ENDIF»
+		}
+		'''
+
+	def compile(For phor)'''
+		for(«
+			IF phor.reference!=null»«
+				phor.reference.type.name» «phor.reference.name» : «IF phor.listReference!=null»«phor.listReference.name»«ELSE»«ExpressionJ::instance.compile(phor.listInstance)»«ENDIF»«
+			ELSE»«
+				IF phor.localVariableDeclaration!=null»«LineStatementJ::instance.compile(phor.localVariableDeclaration)»«ELSE»;«ENDIF»«
+				IF phor.condition!=null»«ConditionJ::instance.compile(phor.condition)»«ENDIF»;«
+				IF phor.expression!=null»«ExpressionJ::instance.compile(phor.expression)»«ENDIF»«
+			ENDIF
+		»){
+			«
+			IF phor.methodBody!=null»«MethodJ::instance.compile(phor.methodBody)»«ENDIF»
 		}
 		'''
 

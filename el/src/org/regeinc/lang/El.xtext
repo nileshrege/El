@@ -173,6 +173,7 @@ Statement:
 BlockStatement:
 	ifBlock=If
 	| whileBlock=While
+	| forBlock=For
 	| guardBlock=Guard;
 
 If:
@@ -183,6 +184,11 @@ Else:
 
 While:
 	'while' condition=Condition methodBody=MethodBody;
+
+For:
+	'for' '(' ((reference=Reference ':' (listInstance=ListInstance | listReference=[Reference])) 
+		| (localVariableDeclaration=LocalVariableDeclaration? ';' condition=Condition? ';' expression=Expression?))')' 
+		methodBody=MethodBody;
 
 	/**
  * check: error on usage of typeRef other than instanceof Guard  
