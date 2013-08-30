@@ -22,26 +22,16 @@ class MethodJ {
 		methodDeclaration.name»(«IF methodDeclaration.parameter!=null»«compile(methodDeclaration.parameter)»«ENDIF»)'''
 	
 	def compile(Parameter parameter)'''
-		«parameter.qualifiedReference.reference.type.name» «parameter.qualifiedReference.reference.name» «IF parameter.list»,«compile(parameter)»«ENDIF»'''
+		«parameter.reference.type.name» «parameter.reference.name» «IF parameter.list»,«compile(parameter)»«ENDIF»'''
 	
 	def compile(MethodDefinition methodDefinition)'''
 		«IF methodDefinition.visibility!=null»«methodDefinition.visibility.toString» «ENDIF»«IF methodDefinition.FINAL»final «
 		ELSEIF methodDefinition.ABSTRACT»abstract «ENDIF»«compile(methodDefinition.methodDeclaration)»«IF methodDefinition.methodBody!=null»{
 			«IF methodDefinition.constraint!=null»«ConditionJ::instance.applyConstraint(methodDefinition.constraint.condition, methodDefinition.methodDeclaration.name)»«ENDIF»
-			«IF methodDefinition.methodDeclaration.parameter!=null»«
-				IF methodDefinition.methodDeclaration.parameter.qualifiedReference.typePrefix!=null»«
-					new TypePrefixJ(methodDefinition.methodDeclaration.parameter.qualifiedReference.reference.name)
-						.applyConstraint(methodDefinition.methodDeclaration.parameter.qualifiedReference.typePrefix)»«
-				ENDIF»«
-			ENDIF»
 			«compile(methodDefinition.methodBody)»
 		}«ELSE»;«ENDIF»
 	'''
-
-	def prefix(Parameter parameter)'''
-		«IF parameter.qualifiedReference.typePrefix!=null»«
-			new TypePrefixJ(parameter.qualifiedReference.reference.name).applyConstraint(parameter.qualifiedReference.typePrefix)»«ENDIF»'''
-	
+		
 	def compile(MethodBody methodBody)'''
 		«IF !methodBody.allStatement.nullOrEmpty»«
 		FOR statement:methodBody.allStatement»«

@@ -90,7 +90,7 @@ MethodDeclaration:
  * check: error on usage of keyword as name
  */
 Parameter:
-	qualifiedReference=QualifiedReference (list?=',' next=Parameter)?;
+	reference=Reference (list?=',' next=Parameter)?;
 
 	/**
  * check: error on usage of keyword as name

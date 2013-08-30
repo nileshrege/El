@@ -154,7 +154,7 @@ public class Finder {
 		class ParameterFinder {
 			List<Reference> find(Parameter parameter) {
 				List<Reference> allTypeRef = new ArrayList<Reference>();
-				allTypeRef.add(parameter.getQualifiedReference().getReference());
+				allTypeRef.add(parameter.getReference());
 				if(parameter.isList()){
 					allTypeRef.addAll(find(parameter.getNext()));
 				}

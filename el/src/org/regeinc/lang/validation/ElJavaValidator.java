@@ -120,8 +120,8 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	}
 
 	boolean isSameParameter(Parameter first, Parameter second){
-		Type firstType = first.getQualifiedReference().getReference().getType();
-		Type secondType = second.getQualifiedReference().getReference().getType(); 
+		Type firstType = first.getReference().getType();
+		Type secondType = second.getReference().getType(); 
 		if(isSameType(firstType, secondType)){
 			if(first.isList() && second.isList()){
 				return isSameParameter(first.getNext(), second.getNext());
@@ -163,7 +163,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 				result.addAll(identities);
 				for(Reference identity : identities){
 					Parameter param = methodDefinition.getMethodDeclaration().getParameter();
-					if(param.getQualifiedReference().getReference().getType().getName().equals(identity.getType().getName())){
+					if(param.getReference().getType().getName().equals(identity.getType().getName())){
 						result.remove(identity);
 					}
 				}
@@ -199,24 +199,6 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 		return identityList;
 	}
 	
-	@Check
-	public void checkTypedParametersOnlyAllowedForPrivateMethods(MethodDeclaration methodDeclaration){
-		if(methodDeclaration.eContainer() instanceof Contract || !((MethodDefinition)methodDeclaration.eContainer()).getVisibility().toString().equals("private")){
-			if(methodDeclaration.getParameter()!=null){
-				if(isSpecificTypeParam(methodDeclaration.getParameter())){
-					error("typed parameters only allowed in private methods of class", ElPackage.eINSTANCE.eContainingFeature());	
-				}
-			}
-		}
-	}
-	
-	boolean isSpecificTypeParam(Parameter parameter){
-		if(parameter.getQualifiedReference().getTypePrefix()==null && parameter.isList()){
-			return isSpecificTypeParam(parameter.getNext());
-		}
-		return false;
-	}
-
 	@Check
 	public void checkAbstractMethodsNotDeclaredPrivate(MethodDefinition methodDefinition){
 		if(!(methodDefinition.eContainer() instanceof Contract)){
