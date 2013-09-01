@@ -36,7 +36,7 @@ class LineStatementJ {
 	def compile(Instruction instruction)'''
 		«IF instruction.BREAK»break«
 		ELSEIF instruction.CONTINUE»continue«
-		ELSEIF instruction.RETURN» return «
+		ELSEIF instruction.RETURN» return «ExpressionJ::instance.compile(instruction.expression)»«
 		ELSEIF instruction.PRINT» System.out.println(«ExpressionJ::instance.compile(instruction.expression)»)«
 		ELSE»«instruction.reference.name» = «ExpressionJ::instance.compile(instruction.expression)»«ENDIF»;'''
 }
