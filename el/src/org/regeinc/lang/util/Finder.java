@@ -10,14 +10,14 @@ import org.regeinc.lang.el.Contract;
 import org.regeinc.lang.el.Entity;
 import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LineStatement;
-import org.regeinc.lang.el.LocalVariableBinding;
 import org.regeinc.lang.el.MethodDeclaration;
 import org.regeinc.lang.el.MethodDefinition;
 import org.regeinc.lang.el.Model;
 import org.regeinc.lang.el.Parameter;
-import org.regeinc.lang.el.State;
-import org.regeinc.lang.el.Type;
 import org.regeinc.lang.el.Reference;
+import org.regeinc.lang.el.State;
+import org.regeinc.lang.el.Statement;
+import org.regeinc.lang.el.Type;
 
 interface Criteria {
 	boolean isSatisfiedBy(EObject context);
@@ -175,20 +175,15 @@ public class Finder {
 	}
 
 	public static List<Reference> allLocalVariable(EObject context) {
-		class LocalVariableBindingFinder{
-			List<Reference> find(LocalVariableBinding localVariableBinding) {
-				List<Reference> allTypeRef = new ArrayList<Reference>();
-				allTypeRef.add(localVariableBinding.getLocalVariableDeclaration().getQualifiedReference().getReference());
-				if(localVariableBinding.isList()){
-					allTypeRef.addAll(find(localVariableBinding.getNext()));
-				}
-				return allTypeRef;
-			}
-		}
 		List<Reference> allTypeRef = new ArrayList<Reference>();
-		LineStatement lineStatement = (LineStatement) lookUp(context, new LineStatementCriteria());
-		if (lineStatement != null && lineStatement.getLocalVariableBinding()!= null) {
-			allTypeRef.addAll(new LocalVariableBindingFinder().find(lineStatement.getLocalVariableBinding()));
+		MethodDefinition methodDefinition = (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
+		for(Statement stmt : methodDefinition.getMethodBody().getAllStatement()){
+			if(stmt instanceof LineStatement){
+				LineStatement lineStatement = (LineStatement) stmt;
+				if (lineStatement.getLocalVariableDeclaration()!= null) {
+					allTypeRef.add(lineStatement.getLocalVariableDeclaration().getQualifiedReference().getReference());
+				}						
+			}
 		}
 		return allTypeRef;
 	}

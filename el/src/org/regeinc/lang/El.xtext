@@ -177,13 +177,13 @@ BlockStatement:
 	| guardBlock=Guard;
 
 If:
-	'if' condition=Condition methodBody=MethodBody elseBlock=Else?;
+	'if' '(' condition=Condition ')' methodBody=MethodBody elseBlock=Else?;
 
 Else:
 	'else' (ifCondition=If | methodBody=MethodBody);
 
 While:
-	'while' condition=Condition methodBody=MethodBody;
+	'while' '(' condition=Condition ')' methodBody=MethodBody;
 
 For:
 	'for' '(' ((reference=Reference ':' (listInstance=ListInstance | listReference=[Reference])) 
@@ -201,33 +201,10 @@ Guard:
  * scope: let expression not allowed outside of containing LineStatement
  */
 LineStatement:
-	(doWhere=DoWhere
-	| (LETEXPRESSION?='let' localVariableBinding=LocalVariableBinding 'in' doWhere=DoWhere)) ';';
-
-LocalVariableBinding:
-	localVariableDeclaration=LocalVariableDeclaration (list?=',' next=LocalVariableBinding)?;
+	(localVariableDeclaration=LocalVariableDeclaration | instruction=Instruction) ';';
 
 LocalVariableDeclaration:
-	qualifiedReference=QualifiedReference '=' expression=Expression;
-
-DoWhere:
-	doIf=DoIf (CONTEXTUAL?='where' where=Where)?;
-
-Where:
-	clause=Clause (NESTED?='and' where=Where)?;
-
-	/**
- * check: error on usage of instance other than instanceof List
- */
-Clause:
-	(=> reference=Reference 'from' expression=Expression) // only list instance
-	| condition=Condition;
-
-DoIf:
-	instruction=Instruction (CONDITIONAL?='provided' provided=Provided)?;
-
-Provided:
-	condition=Condition (ALTERNATE?='otherwise' doIf=DoIf)?;
+	=>qualifiedReference=QualifiedReference '=' expression=Expression;
 
 	/**
  * check: error on usage of passive Instance in isolation
@@ -236,7 +213,7 @@ Provided:
  */
 Instruction:
 	(BREAK?='break' | CONTINUE?='continue')
-	| (((=> reference=[Reference|QualifiedName] COPY?='=') | (RETURN?='return' | PRINT?='print'))? expression=Expression);
+	| (((RETURN?='return' | PRINT?='print') | (=> reference=[Reference|QualifiedName] '='))? expression=Expression) ;
 
 	/**
  * check: error on usage of ASTERIX if LHS is not numeric
