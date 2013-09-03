@@ -9,3 +9,4 @@ El is an XText based programming language intended to,
 - reduce time and efforts developing and maintaining code
 - reduce the need for documentation
 
+For more information please visit the wiki page https://github.com/nileshrege/El/wiki
