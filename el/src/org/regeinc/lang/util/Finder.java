@@ -8,6 +8,7 @@ import org.regeinc.lang.el.Association;
 import org.regeinc.lang.el.Constraint;
 import org.regeinc.lang.el.Contract;
 import org.regeinc.lang.el.Entity;
+import org.regeinc.lang.el.Expression;
 import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LineStatement;
 import org.regeinc.lang.el.MethodDeclaration;
@@ -77,6 +78,12 @@ class InstanceCriteria implements Criteria{
 	}
 }
 
+class ExpressionCriteria implements Criteria{
+	public boolean isSatisfiedBy(EObject context) {
+		return context instanceof Expression;
+	}
+}
+
 public class Finder {
 	
 	public static EObject lookUp(EObject context, Criteria criteria) {
@@ -106,10 +113,13 @@ public class Finder {
 	}
 
 	public static Instance instance(EObject context) {
-		Instance instance = (Instance) lookUp(context, new InstanceCriteria());
-		return instance;
+		return (Instance) lookUp(context, new InstanceCriteria());
 	}
-	
+
+	public static Expression expression(EObject context) {
+		return (Expression) lookUp(context, new ExpressionCriteria());
+	}
+
 	public static MethodDeclaration methodDeclaration(EObject context) {
 		Entity entity = (Entity) lookUp(context, new EntityCriteria());
 		if (entity != null) {
@@ -176,13 +186,19 @@ public class Finder {
 
 	public static List<Reference> allLocalVariable(EObject context) {
 		List<Reference> allTypeRef = new ArrayList<Reference>();
-		MethodDefinition methodDefinition = (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
-		for(Statement stmt : methodDefinition.getMethodBody().getAllStatement()){
-			if(stmt instanceof LineStatement){
-				LineStatement lineStatement = (LineStatement) stmt;
-				if (lineStatement.getLocalVariableDeclaration()!= null) {
-					allTypeRef.add(lineStatement.getLocalVariableDeclaration().getQualifiedReference().getReference());
-				}						
+		
+		EObject eObject = lookUp(context, new MethodDefinitionCriteria());
+		if(eObject!=null){
+			MethodDefinition methodDefinition = (MethodDefinition) eObject;
+			if(methodDefinition.getMethodBody()!=null && methodDefinition.getMethodBody().getAllStatement()!=null){
+				for(Statement stmt : methodDefinition.getMethodBody().getAllStatement()){
+					if(stmt instanceof LineStatement){
+						LineStatement lineStatement = (LineStatement) stmt;
+						if (lineStatement.getLocalVariableDeclaration()!= null) {
+							allTypeRef.add(lineStatement.getLocalVariableDeclaration().getQualifiedReference().getReference());
+						}						
+					}
+				}
 			}
 		}
 		return allTypeRef;
@@ -220,5 +236,9 @@ public class Finder {
 	
 	public static Entity entity(EObject context) {
 		return (Entity) lookUp(context, new EntityCriteria());
+	}
+	
+	public static MethodDefinition methodDefinition(EObject context){
+		return (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
 	}
 }
