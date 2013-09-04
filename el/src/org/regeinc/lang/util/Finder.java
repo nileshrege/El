@@ -9,6 +9,7 @@ import org.regeinc.lang.el.Constraint;
 import org.regeinc.lang.el.Contract;
 import org.regeinc.lang.el.Entity;
 import org.regeinc.lang.el.Expression;
+import org.regeinc.lang.el.For;
 import org.regeinc.lang.el.Instance;
 import org.regeinc.lang.el.LineStatement;
 import org.regeinc.lang.el.MethodDeclaration;
@@ -16,6 +17,7 @@ import org.regeinc.lang.el.MethodDefinition;
 import org.regeinc.lang.el.Model;
 import org.regeinc.lang.el.Parameter;
 import org.regeinc.lang.el.Reference;
+import org.regeinc.lang.el.Select;
 import org.regeinc.lang.el.State;
 import org.regeinc.lang.el.Statement;
 import org.regeinc.lang.el.Type;
@@ -84,6 +86,18 @@ class ExpressionCriteria implements Criteria{
 	}
 }
 
+class SelectCriteria implements Criteria{
+	public boolean isSatisfiedBy(EObject context) {
+		return context instanceof Select;
+	}
+}
+
+class ForCriteria implements Criteria{
+	public boolean isSatisfiedBy(EObject context) {
+		return context instanceof For;
+	}
+}
+
 public class Finder {
 	
 	public static EObject lookUp(EObject context, Criteria criteria) {
@@ -101,17 +115,10 @@ public class Finder {
 		return type;
 	}
 
-	public static List<Reference> associations(EObject context) {
-		List<Reference> allTypeRef = new ArrayList<Reference>();
-		Entity entity = (Entity) lookUp(context, new EntityCriteria());
-		if (entity != null) {
-			for (Association association : entity.getAllAssociation()) {
-				allTypeRef.add(association.getQualifiedReference().getReference());
-			}
-		}
-		return allTypeRef;
+	public static Entity entity(EObject context) {
+		return (Entity) lookUp(context, new EntityCriteria());
 	}
-
+	
 	public static Instance instance(EObject context) {
 		return (Instance) lookUp(context, new InstanceCriteria());
 	}
@@ -130,7 +137,41 @@ public class Finder {
 		}
 		return null;
 	}
+
+	public static MethodDefinition methodDefinition(EObject context){
+		return (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
+	}
 	
+	public static List<Reference> allAssociation(EObject context, Association excluded) {
+		List<Reference> allTypeRef = new ArrayList<Reference>();
+		Entity entity = (Entity) lookUp(context, new EntityCriteria());
+		if (entity != null) {
+			for(Association association : entity.getAllAssociation()){
+				if(excluded!=null){
+					if(excluded.equals(association)) 
+						continue;
+				}
+				allTypeRef.add(association.getQualifiedReference().getReference());
+			}
+		}
+		return allTypeRef;
+	}
+
+	public static List<State> allState(EObject context, State excluded) {
+		List<State> allState = new ArrayList<State>();
+		Entity entity = (Entity) lookUp(context, new EntityCriteria());
+		if (entity != null) {
+			for(State state : entity.getAllState()){
+				if(excluded!=null){
+					if(state.equals(excluded))
+						continue;	
+				}
+				allState.add(state);	
+			}
+		}
+		return allState;
+	}
+
 	public static List<MethodDeclaration> allMethodDeclaration(EObject context) {
 		List<MethodDeclaration> allMethodDeclaration = new ArrayList<MethodDeclaration>();
 		Contract contract = (Contract) lookUp(context, new ContractCriteria());
@@ -204,41 +245,22 @@ public class Finder {
 		return allTypeRef;
 	}
 	
-	public static List<State> allState(EObject context, State excluded) {
-		List<State> allState = new ArrayList<State>();
-		Entity entity = (Entity) lookUp(context, new EntityCriteria());
-		if (entity != null) {
-			for(State state : entity.getAllState()){
-				if(excluded!=null){
-					if(state.equals(excluded))
-						continue;	
-				}
-				allState.add(state);	
-			}
+	public static Reference selectVariable(EObject context) {
+		EObject eObject = lookUp(context, new SelectCriteria());
+		if(eObject!=null){
+			Select select = (Select) eObject;
+			return select.getReference();
 		}
-		return allState;
+		return null;
 	}
 
-	public static List<Reference> allAssociation(EObject context, Association excluded) {
-		List<Reference> allTypeRef = new ArrayList<Reference>();
-		Entity entity = (Entity) lookUp(context, new EntityCriteria());
-		if (entity != null) {
-			for(Association association : entity.getAllAssociation()){
-				if(excluded!=null){
-					if(excluded.equals(association)) 
-						continue;
-				}
-				allTypeRef.add(association.getQualifiedReference().getReference());
-			}
+	public static Reference forVariable(EObject context) {
+		EObject eObject = lookUp(context, new ForCriteria());
+		if(eObject!=null){
+			For phore = (For) eObject;
+			return phore.getReference();
 		}
-		return allTypeRef;
+		return null;
 	}
-	
-	public static Entity entity(EObject context) {
-		return (Entity) lookUp(context, new EntityCriteria());
-	}
-	
-	public static MethodDefinition methodDefinition(EObject context){
-		return (MethodDefinition) lookUp(context, new MethodDefinitionCriteria());
-	}
+
 }
