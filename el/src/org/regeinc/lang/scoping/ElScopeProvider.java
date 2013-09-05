@@ -34,7 +34,7 @@ import org.regeinc.lang.util.Finder;
 public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 	
 	IScope scope_StateComparison_state(EObject context, EReference eReference){
-		List<State> allStates =  new ArrayList<>();
+		List<State> allStates =  new ArrayList<State>();
 		if(context instanceof StateComparison){
 			StateComparison stateComparison = (StateComparison) context;
 			if(stateComparison.eContainer() instanceof Comparison){
