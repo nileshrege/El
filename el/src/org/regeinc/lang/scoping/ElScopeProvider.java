@@ -24,6 +24,7 @@ import org.regeinc.lang.el.Select;
 import org.regeinc.lang.el.State;
 import org.regeinc.lang.el.StateComparison;
 import org.regeinc.lang.el.Type;
+import org.regeinc.lang.el.TypeParameter;
 import org.regeinc.lang.util.Finder;
 
 /** 
@@ -45,8 +46,8 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 						if(expression.getDivision().getAddition().getSubstraction()!=null){
 							if(expression.getDivision().getAddition().getSubstraction().getInstance()!=null){
 								Instance instance = expression.getDivision().getAddition().getSubstraction().getInstance();
-								if(instance.getReference()!=null){
-									allStates.addAll(Finder.allState(instance.getReference().getType(), null));
+								if(instance.getReference()!=null && instance.getReference().getParameterizedType().getType()!=null){
+									allStates.addAll(Finder.allState(instance.getReference().getParameterizedType().getType(), null));
 								}
 							}
 						}
@@ -65,7 +66,9 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 		if(instance !=null){			
 			if(instance.getReference()!=null){
 				Reference reference = instance.getReference();
-				allMethodDeclaration.addAll(Finder.allMethodDeclaration(reference.getType()));
+				if(reference.getParameterizedType().getType()!=null){
+					allMethodDeclaration.addAll(Finder.allMethodDeclaration(reference.getParameterizedType().getType()));
+				}
 			}
 		}
 		IScope iscope = Scopes.scopeFor(allMethodDeclaration);
@@ -78,7 +81,7 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 		if(instance !=null){
 			if(instance.getReference()!=null){
 				Reference reference = instance.getReference();
-				Type type = reference.getType();
+				Type type = reference.getParameterizedType().getType();
 				allReference.addAll(Finder.allLocalVariable(type));
 				allReference.addAll(Finder.allParameter(type));
 				allReference.addAll(Finder.allAssociation(type, null));
@@ -119,5 +122,31 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 		}		
 		IScope iscope = Scopes.scopeFor(allReference);
 		return iscope;
+	}
+	
+	IScope scope_ParameterizedType_typeParameter(EObject context, EReference eReference){
+		List<TypeParameter> allTypeParameter = new ArrayList<TypeParameter>();
+		Entity  entity = (Entity)Finder.entity(context);	
+		if(entity.getTypeParameter()!=null){
+			allTypeParameter.addAll(allTypeParameter(entity.getTypeParameter()));
+		}
+		if(context instanceof MethodDeclaration){
+			MethodDeclaration methodDeclaration = (MethodDeclaration)context;
+			if(methodDeclaration.getTypeParameter()!=null){
+				allTypeParameter.addAll(allTypeParameter(methodDeclaration.getTypeParameter()));
+			}
+		}
+		
+		IScope iscope = Scopes.scopeFor(allTypeParameter);
+		return iscope;
+	}
+	
+	private List<TypeParameter> allTypeParameter(TypeParameter typeParameter){
+		List<TypeParameter> allTypeParameter = new ArrayList<TypeParameter>();
+		allTypeParameter.add(typeParameter);
+		if(typeParameter.getTypeParameter()!=null){
+			allTypeParameter.addAll(allTypeParameter(typeParameter.getTypeParameter()));
+		}
+		return allTypeParameter;
 	}	
 }

@@ -9,10 +9,8 @@ import org.regeinc.lang.el.Instance
 import org.regeinc.lang.el.ListInstance
 import org.regeinc.lang.el.Literal
 import org.regeinc.lang.el.NewInstance
-import org.regeinc.lang.el.Substraction
 import org.regeinc.lang.el.Select
-import org.regeinc.lang.util.Finder
-import org.regeinc.lang.el.Entity
+import org.regeinc.lang.el.Substraction
 
 class ExpressionJ{
 	private new(){		
@@ -60,16 +58,16 @@ class ExpressionJ{
 
 	def compile(Select select)'''
 		«IF select.CLAUSE»
-		new java.util.ArrayList<«select.reference.type.name»>(){
-			public List<«select.reference.type.name»> filter(List<«select.reference.type.name»> originalList){				
-				List<«select.reference.type.name»> all«select.reference.type.name» = new ArrayList<>();
-				for(Iterator<«select.reference.type.name»> it = originalList.iterator(); it.hasNext();){
-					final «select.reference.type.name» «select.reference.name» = it.next();
+		new java.util.ArrayList<«select.reference.parameterizedType.type.name»>(){
+			public List<«select.reference.parameterizedType.type.name»> filter(List<«select.reference.parameterizedType.type.name»> originalList){				
+				List<«select.reference.parameterizedType.type.name»> all«select.reference.parameterizedType.type.name» = new ArrayList<>();
+				for(Iterator<«select.reference.parameterizedType.type.name»> it = originalList.iterator(); it.hasNext();){
+					final «select.reference.parameterizedType.type.name» «select.reference.name» = it.next();
 					if(«ConditionJ::instance.compile(select.condition)»){
-						all«select.reference.type.name».add(«select.reference.name»);
+						all«select.reference.parameterizedType.type.name».add(«select.reference.name»);
 					}
 				}
-				return all«select.reference.type.name»;	
+				return all«select.reference.parameterizedType.type.name»;	
 			}	
 		}.filter(«select.listReference.name»)«ELSE»«select.listReference.name»«ENDIF»'''
 

@@ -33,7 +33,7 @@ class BlockStatementJ {
 	def compile(For phor)'''
 		for(«
 			IF phor.reference!=null»«
-				phor.reference.type.name» «phor.reference.name» : «IF phor.listReference!=null»«phor.listReference.name»«ELSE»«ExpressionJ::instance.compile(phor.listInstance)»«ENDIF»«
+				phor.reference.parameterizedType.type.name» «phor.reference.name» : «IF phor.listReference!=null»«phor.listReference.name»«ELSE»«ExpressionJ::instance.compile(phor.listInstance)»«ENDIF»«
 			ELSE»«
 				IF phor.localVariableDeclaration!=null»«LineStatementJ::instance.compile(phor.localVariableDeclaration)»«ELSE»;«ENDIF»«
 				IF phor.condition!=null»«ConditionJ::instance.compile(phor.condition)»«ENDIF»;«

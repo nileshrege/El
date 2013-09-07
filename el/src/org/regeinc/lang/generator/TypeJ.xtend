@@ -67,7 +67,7 @@ class TypeJ {
 	def private constructor(Entity entity)'''
 		«IF !getIdentities(entity).nullOrEmpty»
 		
-		public «entity.name»(«FOR a:getIdentities(entity) SEPARATOR ', ' »«a.qualifiedReference.reference.type.name» «a.qualifiedReference.reference.name»«ENDFOR»){
+		public «entity.name»(«FOR a:getIdentities(entity) SEPARATOR ', ' »«a.qualifiedReference.reference.parameterizedType.type.name» «a.qualifiedReference.reference.name»«ENDFOR»){
 			«FOR association:getIdentities(entity)»
 				«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition, association.qualifiedReference.reference.name)»«ENDIF»
 				this.«association.qualifiedReference.reference.name» = «association.qualifiedReference.reference.name»;

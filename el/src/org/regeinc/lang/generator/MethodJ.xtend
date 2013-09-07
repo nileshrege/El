@@ -18,11 +18,11 @@ class MethodJ {
 	}
 		
 	def compile(MethodDeclaration methodDeclaration)'''
-		«IF methodDeclaration.returnType!=null»«methodDeclaration.returnType.name» «ELSE»void «ENDIF»«
+		«IF methodDeclaration.parameterizedType!=null && methodDeclaration.parameterizedType.type!=null»«methodDeclaration.parameterizedType.type.name» «ELSE»void «ENDIF»«
 		methodDeclaration.name»(«IF methodDeclaration.parameter!=null»«compile(methodDeclaration.parameter)»«ENDIF»)'''
 	
 	def compile(Parameter parameter)'''
-		«parameter.reference.type.name» «parameter.reference.name» «IF parameter.list»,«compile(parameter)»«ENDIF»'''
+		«parameter.reference.parameterizedType.type.name» «parameter.reference.name» «IF parameter.list»,«compile(parameter)»«ENDIF»'''
 	
 	def compile(MethodDefinition methodDefinition)'''
 		«IF methodDefinition.visibility!=null»«methodDefinition.visibility.toString» «ENDIF»«IF methodDefinition.FINAL»final «

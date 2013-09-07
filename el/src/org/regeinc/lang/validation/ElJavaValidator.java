@@ -120,8 +120,8 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 	}
 
 	boolean isSameParameter(Parameter first, Parameter second){
-		Type firstType = first.getReference().getType();
-		Type secondType = second.getReference().getType(); 
+		Type firstType = first.getReference().getParameterizedType().getType();
+		Type secondType = second.getReference().getParameterizedType().getType(); 
 		if(isSameType(firstType, secondType)){
 			if(first.isList() && second.isList()){
 				return isSameParameter(first.getNext(), second.getNext());
@@ -148,11 +148,11 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 		}		
 	}
 	
-	@Check
+	/*@Check
 	public void checksForInstanceMethod(MethodDefinition methodDefinition){
 		if(methodDefinition.getMethodDeclaration().getName().equals("instance")){
-			if(!(methodDefinition.getMethodDeclaration().getReturnType()!=null) 
-					|| !(isOfType(methodDefinition.getMethodDeclaration().getReturnType().getType(),(Type)methodDefinition.eContainer()))){
+			if(!(methodDefinition.getMethodDeclaration().getParameterizedType().getType()!=null) 
+					|| !(isOfType(methodDefinition.getMethodDeclaration().getParameterizedType().getType().getType(),(Type)methodDefinition.eContainer()))){
 				error("instance method must return instance of the enclosing class or subclass", ElPackage.eINSTANCE.eContainingFeature());
 			}
 			List<Reference> identities = identities(((Entity)methodDefinition.eContainer()).getAllAssociation());
@@ -163,7 +163,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 				result.addAll(identities);
 				for(Reference identity : identities){
 					Parameter param = methodDefinition.getMethodDeclaration().getParameter();
-					if(param.getReference().getType().getName().equals(identity.getType().getName())){
+					if(param.getReference().getParameterizedType().getType().getName().equals(identity.getParameterizedType().getType().getName())){
 						result.remove(identity);
 					}
 				}
@@ -187,7 +187,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 			}
 		}
 		return flag;
-	}
+	}*/
 	
 	List<Reference> identities(List<Association> associationList){
 		List<Reference> identityList = new ArrayList<Reference>();

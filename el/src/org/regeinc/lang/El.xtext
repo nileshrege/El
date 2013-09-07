@@ -29,8 +29,19 @@ enum Visibility:
 	PUBLIC='public' | PRIVATE='private' | PROTECTED='protected';
 
 Type:
-	Contract | Entity;
+	Contract | Entity | TypeParameter;
 
+TypeParameter:
+	(name=ID ('extends' type=ParameterizedType (=>'&' allParameterizedType+=ParameterizedType)*)?)  (',' typeParameter=TypeParameter)?;
+
+ParameterizedType:
+	type=[Type|QualifiedName] (=>'<'wildcard=Wildcard'>')?
+	| (=>typeParam=[TypeParameter]);
+
+Wildcard:
+	UNBOUND?='?' 
+	| (('?' (UPPERBOUND?='extends' | LOWERBOUND?='super'))? parameterizedType=ParameterizedType);
+		
 	/**
  * check: error on usage of keyword as name
  * check: error on duplicate
@@ -40,9 +51,8 @@ Type:
  * check: error on extending final Contract
  */
 Contract:
-	visibility=Visibility? 'interface' name=ID (EXTENDS?='extends' type=[Contract|QualifiedName])?
-	'{'
-	(allMethodDeclaration+=MethodDeclaration ';')*
+	visibility=Visibility? 'interface' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' type=[Contract|QualifiedName])? '{'
+		(allMethodDeclaration+=MethodDeclaration ';')*
 	'}';
 
 	/**
@@ -54,11 +64,13 @@ Contract:
  * check: error on extending final Entity
  */
 Entity:
-	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID (EXTENDS?='extends'
-	type=[Type|QualifiedName])? (IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (','
-	allContract+=[Contract|QualifiedName])*)?
-	'{'
-	(allMethodDefinition+=MethodDefinition | allAssociation+=Association | allState+=State)*
+	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID ('<'typeParameter=TypeParameter'>')? 
+		(EXTENDS?='extends' type=[Type|QualifiedName])? 
+			(IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (',' allContract+=[Contract|QualifiedName])*)? '{'
+		
+		(=>allAssociation+=Association
+			| =>allMethodDefinition+=MethodDefinition  
+			| allState+=State)*
 	'}';
 
 	/**
@@ -75,8 +87,8 @@ State:
  * check: error on duplicate Association
  */
 Association:
-	visibility=Visibility? IDENTITY?='identity'?
-	qualifiedReference=QualifiedReference (constraint=Constraint | (INITIALIZED?='=' expression=Expression))? ';';
+	visibility=Visibility? IDENTITY?='identity'? qualifiedReference=QualifiedReference 
+		(constraint=Constraint | (INITIALIZED?='=' expression=Expression))? ';';
 
 	/**
  * check: error on usage of keyword as name
@@ -84,7 +96,7 @@ Association:
  * check: error on duplicate MethodDeclaration
  */
 MethodDeclaration:
-	returnType=[Type|QualifiedName]? name=ID '(' (parameter=Parameter)? ')';
+	('<'typeParameter=TypeParameter'>')? parameterizedType=ParameterizedType? name=ID '(' (parameter=Parameter)? ')';
 
 	/**
  * check: error on usage of keyword as name
@@ -102,7 +114,7 @@ QualifiedReference:
  * check: error on usage of keyword as name
  */
 Reference:
-	FINAL?='final'? NOTNULL?='notnull'? type=[Type|QualifiedName] name=ID;
+	FINAL?='final'? NOTNULL?='notnull'? parameterizedType=ParameterizedType name=ID;
 
 TypePrefix:
 	andPrefix=AndPrefix ('||' typePrefix=TypePrefix)?;
@@ -121,7 +133,7 @@ NotPrefix:
  */
 MethodDefinition:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')?
-	methodDeclaration=MethodDeclaration ((constraint=Constraint? methodBody=MethodBody) | UNDEFINED?=';');
+		methodDeclaration=MethodDeclaration ((constraint=Constraint? methodBody=MethodBody) | UNDEFINED?=';');
 
 Constraint:
 	'onlyif' condition=Condition;
@@ -141,8 +153,7 @@ NotCondition:
  * scope: all public Association.Association, all Association.State, all public Parameter.Association, all Parameter.State 
  */
 Comparison:
-	(expression=Expression (stateComparison=StateComparison | typeComparison=TypeComparison |
-	associativeComparison=AssociativeComparison)?);
+	(expression=Expression (stateComparison=StateComparison | typeComparison=TypeComparison | associativeComparison=AssociativeComparison)?);
 
 StateComparison:
 	IS?='is' state=[State|QualifiedName];
@@ -154,21 +165,18 @@ AssociativeComparison:
 	comparator=Comparator expression=Expression;
 
 enum Comparator:
-	EQUAL='==' | NOTEQUAL='!=' | LESSTHAN='<' | GREATERTHAN='>' | LESSTHANOREQUAL='<=' | GREATERTHANOREQUAL='>=' |
-	IN='in' | MATCH='?=';
+	EQUAL='==' | NOTEQUAL='!=' | LESSTHAN='<' | GREATERTHAN='>' | LESSTHANOREQUAL='<=' | GREATERTHANOREQUAL='>=' | IN='in' | MATCH='?=';
 
 MethodBody:
-	{MethodBody}
-	'{'
-	allStatement+=Statement*
+	{MethodBody}'{'
+		allStatement+=Statement*
 	'}';
 
 	/**
  * check: error on absence of LineStatement for NON void methods
  */
 Statement:
-	blockStatement=BlockStatement
-	| lineStatement=LineStatement;
+	blockStatement=BlockStatement | lineStatement=LineStatement;
 
 BlockStatement:
 	ifBlock=If
@@ -186,16 +194,16 @@ While:
 	'while' '(' condition=Condition ')' methodBody=MethodBody;
 
 For:
-	'for' '(' ((reference=Reference ':' (listInstance=ListInstance | listReference=[Reference])) 
+	'for' '(' ((=>reference=Reference ':' (listInstance=ListInstance | listReference=[Reference])) 
 		| (localVariableDeclaration=LocalVariableDeclaration? ';' condition=Condition? ';' expression=Expression?))')' 
-		methodBody=MethodBody;
+			methodBody=MethodBody;
 
 	/**
  * check: error on usage of typeRef other than instanceof Guard  
  */
 Guard:
 	reference=[Reference] 'guarded' allEntity+=[Entity|QualifiedName] (',' allEntity+=[Entity|QualifiedName])*
-	methodBody=MethodBody;
+		methodBody=MethodBody;
 
 	/**
  * scope: let expression not allowed outside of containing LineStatement
@@ -213,7 +221,7 @@ LocalVariableDeclaration:
  */
 Instruction:
 	(BREAK?='break' | CONTINUE?='continue')
-	| (((RETURN?='return' | PRINT?='print') | (=> reference=[Reference|QualifiedName] '='))? expression=Expression) ;
+		| (((RETURN?='return' | PRINT?='print') | (=> reference=[Reference|QualifiedName] '='))? expression=Expression) ;
 
 	/**
  * check: error on usage of ASTERIX if LHS is not numeric
@@ -243,17 +251,14 @@ Substraction:
  * scope: MethodCall must belong to the LHS of DOT
  */
 Instance:
-	((literal=Literal | newInstance=NewInstance | listInstance=ListInstance | reference=[Reference]) ('.'
-	methodCall=MethodCall)?)
-	| '(' groupExpression=Expression ')';
+	((literal=Literal | newInstance=NewInstance | listInstance=ListInstance | reference=[Reference]) ('.' methodCall=MethodCall)?)
+		| '(' groupExpression=Expression ')';
 
 	/**
  * scope: MethodCall must belong to the LHS of DOT
  */
 MethodCall:
-	(reference=[Reference]
-	| (=> methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')')) ('.'
-	methodCall=MethodCall)?;
+	(reference=[Reference] | (=> methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')')) ('.' methodCall=MethodCall)?;
 
 Argument:
 	expression=Expression (list?=',' next=Argument)?;

@@ -30,9 +30,9 @@ class ElGenerator implements IGenerator {
 	
 	def String getPublicTypeName(Element element){
 		for(type: element.allType){
-			if(type.visibility!=null && type.visibility.toString.equals("public")){
-				return type.name
-			}
+			//if(type.visibility!=null && type.visibility.toString.equals("public")){
+				//return type.name
+			//}
 		}
 		// none declared public, return the first one
 		element.allType.head.name
