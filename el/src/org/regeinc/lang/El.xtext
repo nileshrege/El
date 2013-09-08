@@ -28,6 +28,9 @@ QualifiedName:
 enum Visibility:
 	PUBLIC='public' | PRIVATE='private' | PROTECTED='protected';
 
+	/**
+ * check: error on usage of TypeParameter as Type
+ */
 Type:
 	Contract | Entity | TypeParameter;
 
@@ -35,7 +38,7 @@ TypeParameter:
 	(name=ID ('extends' type=ParameterizedType (=>'&' allParameterizedType+=ParameterizedType)*)?)  (',' typeParameter=TypeParameter)?;
 
 ParameterizedType:
-	type=[Type|QualifiedName] (=>'<'wildcard=Wildcard'>')?
+	(type=[Type|QualifiedName] (=>'<'wildcard=Wildcard'>')?)
 	| (=>typeParam=[TypeParameter]);
 
 Wildcard:
@@ -64,8 +67,8 @@ Contract:
  * check: error on extending final Entity
  */
 Entity:
-	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 'class' name=ID ('<'typeParameter=TypeParameter'>')? 
-		(EXTENDS?='extends' type=[Type|QualifiedName])? 
+	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 
+		'class' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' type=[Type|QualifiedName])? 
 			(IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (',' allContract+=[Contract|QualifiedName])*)? '{'
 		
 		(=>allAssociation+=Association
@@ -123,8 +126,7 @@ AndPrefix:
 	notPrefix=NotPrefix ('&&' andPrefix=AndPrefix)?;
 
 NotPrefix:
-	NOT?='!'? (type=[Type|QualifiedName]
-	| '(' typePrefix=TypePrefix ')');
+	NOT?='!'? (type=[Type|QualifiedName] | '(' typePrefix=TypePrefix ')');
 
 	/**
  * check: error on usage of keyword as name
@@ -153,7 +155,7 @@ NotCondition:
  * scope: all public Association.Association, all Association.State, all public Parameter.Association, all Parameter.State 
  */
 Comparison:
-	(expression=Expression (stateComparison=StateComparison | typeComparison=TypeComparison | associativeComparison=AssociativeComparison)?);
+	expression=Expression (stateComparison=StateComparison | typeComparison=TypeComparison | associativeComparison=AssociativeComparison)?;
 
 StateComparison:
 	IS?='is' state=[State|QualifiedName];

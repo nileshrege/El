@@ -27,7 +27,14 @@ import org.regeinc.lang.el.Type;
  *
  */
 public class ElJavaValidator extends AbstractElJavaValidator {
-
+	
+	@Check
+	public void checkTypeParameterWithoutType(org.regeinc.lang.el.TypeParameter typeParameter){
+		if(typeParameter.eContainer() instanceof Element){			
+			error("keyword class or interface missing", ElPackage.eINSTANCE.eContainingFeature());
+		}
+	}
+	
 	@Check
 	public void checkDuplicateImport(Import importStatement){
 		for(Element element: ((Model)importStatement.eContainer()).getAllElement()){
