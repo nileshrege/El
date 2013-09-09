@@ -155,11 +155,11 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 		}		
 	}
 	
-	/*@Check
+	@Check
 	public void checksForInstanceMethod(MethodDefinition methodDefinition){
 		if(methodDefinition.getMethodDeclaration().getName().equals("instance")){
 			if(!(methodDefinition.getMethodDeclaration().getParameterizedType().getType()!=null) 
-					|| !(isOfType(methodDefinition.getMethodDeclaration().getParameterizedType().getType().getType(),(Type)methodDefinition.eContainer()))){
+					|| !(isOfType(methodDefinition.getMethodDeclaration().getParameterizedType().getType(),(Type)methodDefinition.eContainer()))){
 				error("instance method must return instance of the enclosing class or subclass", ElPackage.eINSTANCE.eContainingFeature());
 			}
 			List<Reference> identities = identities(((Entity)methodDefinition.eContainer()).getAllAssociation());
@@ -189,12 +189,12 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 		if(destination.getName().equals(source.getName())){
 			flag = true;
 		}else{
-			if(source.getType()!=null){
-				flag = isOfType(source.getType(), destination);
+			if(source.getParameterizedType().getType()!=null){
+				flag = isOfType(source.getParameterizedType().getType(), destination);
 			}
 		}
 		return flag;
-	}*/
+	}
 	
 	List<Reference> identities(List<Association> associationList){
 		List<Reference> identityList = new ArrayList<Reference>();

@@ -31,7 +31,7 @@ class TypeJ {
 	def compile(Contract contract)'''
 	«IF contract.visibility!=null»«contract.visibility.toString» «ENDIF
 	»interface «contract.name»«IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF» «
-		IF contract.EXTENDS»extends «contract.type.name»«IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF»«ENDIF»{
+		IF contract.EXTENDS»extends «compile(contract.parameterizedType)»«ENDIF»{
 		«IF !contract.allMethodDeclaration.nullOrEmpty»
 			«FOR methodDeclaration:contract.allMethodDeclaration»
 				«MethodJ::instance.compile(methodDeclaration)»;
@@ -42,12 +42,10 @@ class TypeJ {
 
 	def compile(Entity entity)'''
 	«IF entity.visibility!=null»«entity.visibility.toString» «ENDIF»«IF entity.FINAL»final «ELSEIF entity.ABSTRACT»abstract «ENDIF
-	»class «entity.name»«IF entity.typeParameter!=null»<«compile(entity.typeParameter)»>«ENDIF» «
-		IF entity.EXTENDS»extends «entity.type.name»«IF entity.typeParameter!=null»<«compile(entity.typeParameter)»>«ENDIF» «ENDIF»«
-		IF entity.IMPLEMENTS»implements «
-			FOR contract:entity.allContract SEPARATOR ', '»«contract.name»«
-				IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF»«
-			ENDFOR»«
+	»class «entity.name»«IF entity.typeParameter!=null»<«compile(entity.typeParameter)»>«ENDIF»«
+		IF entity.EXTENDS» extends «compile(entity.parameterizedType)»«ENDIF»«
+		IF entity.IMPLEMENTS» implements «
+			FOR parameterizedType : entity.allParameterizedType SEPARATOR ', '»«compile(parameterizedType)»«ENDFOR»«
 		ENDIF»{
 		«IF !entity.allAssociation.nullOrEmpty»
 			«FOR association: entity.allAssociation»

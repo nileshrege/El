@@ -55,7 +55,7 @@ Wildcard:
  * check: error on extending final Contract
  */
 Contract:
-	visibility=Visibility? 'interface' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' type=[Contract|QualifiedName])? '{'
+	visibility=Visibility? 'interface' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' parameterizedType=ParameterizedType)? '{'
 		(allMethodDeclaration+=MethodDeclaration ';')*
 	'}';
 
@@ -69,8 +69,8 @@ Contract:
  */
 Entity:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 
-		'class' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' type=[Type|QualifiedName])? 
-			(IMPLEMENTS?='implements' allContract+=[Contract|QualifiedName] (',' allContract+=[Contract|QualifiedName])*)? '{'
+		'class' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' parameterizedType=ParameterizedType)? 
+			(IMPLEMENTS?='implements' allParameterizedType+=ParameterizedType (',' allParameterizedType+=ParameterizedType)*)? '{'
 		
 		(=>allAssociation+=Association
 			| =>allMethodDefinition+=MethodDefinition  
