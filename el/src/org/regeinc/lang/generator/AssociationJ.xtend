@@ -16,7 +16,7 @@ class AssociationJ {
 	 
 	def compile(Association association)'''
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
-		»«association.qualifiedReference.reference.parameterizedType.type.name» «association.qualifiedReference.reference.name»;
+		»«TypeJ::instance.compile(association.qualifiedReference.reference.parameterizedType)» «association.qualifiedReference.reference.name»;
 		«getter(association)»
 		«setter(association)»
 		«builder(association)»
@@ -25,7 +25,8 @@ class AssociationJ {
 	def getter(Association association)'''
 		
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
-		»«association.qualifiedReference.reference.parameterizedType.type.name» get«association.qualifiedReference.reference.name.toFirstUpper»(){
+		»«TypeJ::instance.compile(association.qualifiedReference.reference.parameterizedType)
+		» get«association.qualifiedReference.reference.name.toFirstUpper»(){
 			return this.«association.qualifiedReference.reference.name»;
 		}
 	'''
@@ -33,17 +34,22 @@ class AssociationJ {
 	def setter(Association association)'''
 		
 		«IF association.visibility!=null»«association.visibility.toString» «ENDIF
-		»void set«association.qualifiedReference.reference.name.toFirstUpper»(«association.qualifiedReference.reference.parameterizedType.type.name» «association.qualifiedReference.reference.name»){
+		»void set«association.qualifiedReference.reference.name.toFirstUpper»(«
+		TypeJ::instance.compile(association.qualifiedReference.reference.parameterizedType)» «association.qualifiedReference.reference.name»){
 			«IF association.qualifiedReference.reference.NOTNULL»«compileNotNullPrefix(association.qualifiedReference)»«ENDIF»
-			«IF association.qualifiedReference.typePrefix!=null»«new TypePrefixJ(association.qualifiedReference.reference.name).applyConstraint(association.qualifiedReference.typePrefix)»«ENDIF»
-			«IF association.constraint!=null»«ConditionJ::instance.applyConstraint(association.constraint.condition, association.qualifiedReference.reference.name)»«ENDIF»
+			«IF association.qualifiedReference.typePrefix!=null»«
+				new TypePrefixJ(association.qualifiedReference.reference.name).applyConstraint(association.qualifiedReference.typePrefix)»«ENDIF»
+			«IF association.constraint!=null»«
+				ConditionJ::instance.applyConstraint(association.constraint.condition, association.qualifiedReference.reference.name)»«ENDIF»
 			this.«association.qualifiedReference.reference.name» = «association.qualifiedReference.reference.name»;
 		}
 	'''
 
 	def builder(Association association)'''
 		
-		«IF association.visibility!=null»«association.visibility.toString» «ENDIF»«(association.eContainer as Entity).name» with«association.qualifiedReference.reference.name.toFirstUpper»(«association.qualifiedReference.reference.parameterizedType.type.name» «association.qualifiedReference.reference.name»){
+		«IF association.visibility!=null»«association.visibility.toString» «ENDIF»«
+		(association.eContainer as Entity).name» with«association.qualifiedReference.reference.name.toFirstUpper»(«
+			TypeJ::instance.compile(association.qualifiedReference.reference.parameterizedType)» «association.qualifiedReference.reference.name»){
 			«IF association.qualifiedReference.reference.NOTNULL»«compileNotNullPrefix(association.qualifiedReference)»«ENDIF»
 			«IF association.qualifiedReference.typePrefix!=null»«»«ENDIF»
 			«IF association.constraint!=null»«»«ENDIF»

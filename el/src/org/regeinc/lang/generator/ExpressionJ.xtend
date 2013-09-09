@@ -58,16 +58,16 @@ class ExpressionJ{
 
 	def compile(Select select)'''
 		«IF select.CLAUSE»
-		new java.util.ArrayList<«select.reference.parameterizedType.type.name»>(){
-			public List<«select.reference.parameterizedType.type.name»> filter(List<«select.reference.parameterizedType.type.name»> originalList){				
+		new java.util.ArrayList<«TypeJ::instance.compile(select.reference.parameterizedType)»>(){
+			public List<«TypeJ::instance.compile(select.reference.parameterizedType)»> filter(List<«TypeJ::instance.compile(select.reference.parameterizedType)»> originalList){				
 				List<«select.reference.parameterizedType.type.name»> all«select.reference.parameterizedType.type.name» = new ArrayList<>();
-				for(Iterator<«select.reference.parameterizedType.type.name»> it = originalList.iterator(); it.hasNext();){
-					final «select.reference.parameterizedType.type.name» «select.reference.name» = it.next();
+				for(Iterator<«TypeJ::instance.compile(select.reference.parameterizedType)»> it = originalList.iterator(); it.hasNext();){
+					final «TypeJ::instance.compile(select.reference.parameterizedType)» «select.reference.name» = it.next();
 					if(«ConditionJ::instance.compile(select.condition)»){
-						all«select.reference.parameterizedType.type.name».add(«select.reference.name»);
+						all«TypeJ::instance.compile(select.reference.parameterizedType)».add(«select.reference.name»);
 					}
 				}
-				return all«select.reference.parameterizedType.type.name»;	
+				return all«TypeJ::instance.compile(select.reference.parameterizedType)»;	
 			}	
 		}.filter(«select.listReference.name»)«ELSE»«select.listReference.name»«ENDIF»'''
 

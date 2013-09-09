@@ -6,6 +6,9 @@ import org.regeinc.lang.el.Entity
 import org.regeinc.lang.el.Type
 import java.util.List
 import java.util.ArrayList
+import org.regeinc.lang.el.TypeParameter
+import org.regeinc.lang.el.ParameterizedType
+import org.regeinc.lang.el.Wildcard
 
 class TypeJ {
 	private new(){		
@@ -27,7 +30,8 @@ class TypeJ {
 
 	def compile(Contract contract)'''
 	«IF contract.visibility!=null»«contract.visibility.toString» «ENDIF
-	»interface «contract.name» «IF contract.EXTENDS»extends «contract.type.name»«ENDIF»{
+	»interface «contract.name»«IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF» «
+		IF contract.EXTENDS»extends «contract.type.name»«IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF»«ENDIF»{
 		«IF !contract.allMethodDeclaration.nullOrEmpty»
 			«FOR methodDeclaration:contract.allMethodDeclaration»
 				«MethodJ::instance.compile(methodDeclaration)»;
@@ -38,7 +42,13 @@ class TypeJ {
 
 	def compile(Entity entity)'''
 	«IF entity.visibility!=null»«entity.visibility.toString» «ENDIF»«IF entity.FINAL»final «ELSEIF entity.ABSTRACT»abstract «ENDIF
-	»class «entity.name» «IF entity.EXTENDS»extends «entity.type.name» «ENDIF»«IF entity.IMPLEMENTS»implements «FOR contract:entity.allContract SEPARATOR ', '»«contract.name»«ENDFOR»«ENDIF»{
+	»class «entity.name»«IF entity.typeParameter!=null»<«compile(entity.typeParameter)»>«ENDIF» «
+		IF entity.EXTENDS»extends «entity.type.name»«IF entity.typeParameter!=null»<«compile(entity.typeParameter)»>«ENDIF» «ENDIF»«
+		IF entity.IMPLEMENTS»implements «
+			FOR contract:entity.allContract SEPARATOR ', '»«contract.name»«
+				IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF»«
+			ENDFOR»«
+		ENDIF»{
 		«IF !entity.allAssociation.nullOrEmpty»
 			«FOR association: entity.allAssociation»
 
@@ -103,4 +113,19 @@ class TypeJ {
 		}
 	'''
 	
+	def compile(TypeParameter typeParameter)'''
+		«typeParameter.name»«
+		IF typeParameter.EXTENDS» extends «compile(typeParameter.parameterizedType)»«
+			IF !typeParameter.allParameterizedType.nullOrEmpty»«
+				FOR parameterizedType: typeParameter.allParameterizedType» & «compile(parameterizedType)»«ENDFOR»«
+			ENDIF»«
+		ENDIF»«IF typeParameter.list», «compile(typeParameter.typeParameter)»«ENDIF»'''
+	
+	def compile(ParameterizedType parameterizedType)'''
+		«IF parameterizedType.type!=null»«parameterizedType.type.name»«IF parameterizedType.wildcard!=null
+			»<«compile(parameterizedType.wildcard)»>«ENDIF»«ELSE»«parameterizedType.typeParam.name»«ENDIF»'''
+	
+	def compile(Wildcard wildcard)'''
+		«IF wildcard.UNBOUND»?«
+		ELSE»«IF wildcard.UPPERBOUND» extends «ELSEIF wildcard.LOWERBOUND» super «ENDIF»«compile(wildcard.parameterizedType)»«ENDIF»'''
 }

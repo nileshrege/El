@@ -35,7 +35,8 @@ Type:
 	Contract | Entity | TypeParameter;
 
 TypeParameter:
-	(name=ID ('extends' type=ParameterizedType (=>'&' allParameterizedType+=ParameterizedType)*)?)  (',' typeParameter=TypeParameter)?;
+	(name=ID (EXTENDS?='extends' parameterizedType=ParameterizedType (=>'&' allParameterizedType+=ParameterizedType)*)?)  
+		(list?=',' typeParameter=TypeParameter)?;
 
 ParameterizedType:
 	(type=[Type|QualifiedName] (=>'<'wildcard=Wildcard'>')?)
