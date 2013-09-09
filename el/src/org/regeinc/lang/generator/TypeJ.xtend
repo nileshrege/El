@@ -30,7 +30,7 @@ class TypeJ {
 
 	def compile(Contract contract)'''
 	«IF contract.visibility!=null»«contract.visibility.toString» «ENDIF
-	»interface «contract.name»«IF contract.typeParameter!=null»<«compile(contract.typeParameter)»>«ENDIF» «
+	»interface «contract.name»«IF contract.typeParameter!=null»«compile(contract.typeParameter)»«ENDIF» «
 		IF contract.EXTENDS»extends «compile(contract.parameterizedType)»«ENDIF»{
 		«IF !contract.allMethodDeclaration.nullOrEmpty»
 			«FOR methodDeclaration:contract.allMethodDeclaration»
@@ -42,7 +42,7 @@ class TypeJ {
 
 	def compile(Entity entity)'''
 	«IF entity.visibility!=null»«entity.visibility.toString» «ENDIF»«IF entity.FINAL»final «ELSEIF entity.ABSTRACT»abstract «ENDIF
-	»class «entity.name»«IF entity.typeParameter!=null»<«compile(entity.typeParameter)»>«ENDIF»«
+	»class «entity.name»«IF entity.typeParameter!=null»«compile(entity.typeParameter)»«ENDIF»«
 		IF entity.EXTENDS» extends «compile(entity.parameterizedType)»«ENDIF»«
 		IF entity.IMPLEMENTS» implements «
 			FOR parameterizedType : entity.allParameterizedType SEPARATOR ', '»«compile(parameterizedType)»«ENDFOR»«
@@ -112,12 +112,12 @@ class TypeJ {
 	'''
 	
 	def compile(TypeParameter typeParameter)'''
-		«typeParameter.name»«
+		<«typeParameter.name»«
 		IF typeParameter.EXTENDS» extends «compile(typeParameter.parameterizedType)»«
 			IF !typeParameter.allParameterizedType.nullOrEmpty»«
 				FOR parameterizedType: typeParameter.allParameterizedType» & «compile(parameterizedType)»«ENDFOR»«
 			ENDIF»«
-		ENDIF»«IF typeParameter.list», «compile(typeParameter.typeParameter)»«ENDIF»'''
+		ENDIF»«IF typeParameter.list», «compile(typeParameter.typeParameter)»«ENDIF»>'''
 	
 	def compile(ParameterizedType parameterizedType)'''
 		«IF parameterizedType.type!=null»«parameterizedType.type.name»«IF parameterizedType.wildcard!=null

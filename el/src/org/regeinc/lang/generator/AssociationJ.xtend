@@ -6,7 +6,7 @@ import org.regeinc.lang.el.QualifiedReference
 
 class AssociationJ {
 	private new(){		
-	}
+	} 
 	static AssociationJ associationJ
 	def static AssociationJ instance(){
 		if(associationJ==null)

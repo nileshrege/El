@@ -18,7 +18,8 @@ class MethodJ {
 	}
 		
 	def compile(MethodDeclaration methodDeclaration)'''
-		«IF methodDeclaration.parameterizedType!=null»«TypeJ::instance.compile(methodDeclaration.parameterizedType)» «ELSE»void «ENDIF»«
+		«IF methodDeclaration.typeParameter!=null»«TypeJ::instance.compile(methodDeclaration.typeParameter)»«ENDIF»«
+		IF methodDeclaration.parameterizedType!=null»«TypeJ::instance.compile(methodDeclaration.parameterizedType)» «ELSE»void «ENDIF»«
 		methodDeclaration.name»(«IF methodDeclaration.parameter!=null»«compile(methodDeclaration.parameter)»«ENDIF»)'''
 	
 	def compile(Parameter parameter)'''

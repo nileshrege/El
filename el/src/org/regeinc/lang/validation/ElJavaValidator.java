@@ -200,7 +200,7 @@ public class ElJavaValidator extends AbstractElJavaValidator {
 		List<Reference> identityList = new ArrayList<Reference>();
 		for(Association association: associationList){
 			if(association.isIDENTITY()){
-				identityList.add(association.getQualifiedReference().getReference());
+			//	identityList.add(association.getQualifiedReference().getReference());
 			}
 		}
 		return identityList;

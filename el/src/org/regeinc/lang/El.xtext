@@ -35,8 +35,8 @@ Type:
 	Contract | Entity | TypeParameter;
 
 TypeParameter:
-	(name=ID (EXTENDS?='extends' parameterizedType=ParameterizedType (=>'&' allParameterizedType+=ParameterizedType)*)?)  
-		(list?=',' typeParameter=TypeParameter)?;
+	'<'(name=ID (EXTENDS?='extends' parameterizedType=ParameterizedType (=>'&' allParameterizedType+=ParameterizedType)*)?)  
+		(list?=',' typeParameter=TypeParameter)?'>';
 
 ParameterizedType:
 	(type=[Type|QualifiedName] (=>'<'wildcard=Wildcard'>')?)
@@ -55,7 +55,7 @@ Wildcard:
  * check: error on extending final Contract
  */
 Contract:
-	visibility=Visibility? 'interface' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' parameterizedType=ParameterizedType)? '{'
+	visibility=Visibility? 'interface' name=ID typeParameter=TypeParameter? (EXTENDS?='extends' parameterizedType=ParameterizedType)? '{'
 		(allMethodDeclaration+=MethodDeclaration ';')*
 	'}';
 
@@ -69,11 +69,11 @@ Contract:
  */
 Entity:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')? 
-		'class' name=ID ('<'typeParameter=TypeParameter'>')? (EXTENDS?='extends' parameterizedType=ParameterizedType)? 
+		'class' name=ID typeParameter=TypeParameter? (EXTENDS?='extends' parameterizedType=ParameterizedType)? 
 			(IMPLEMENTS?='implements' allParameterizedType+=ParameterizedType (',' allParameterizedType+=ParameterizedType)*)? '{'
 		
 		(=>allAssociation+=Association
-			| =>allMethodDefinition+=MethodDefinition  
+			| allMethodDefinition+=MethodDefinition  
 			| allState+=State)*
 	'}';
 
@@ -100,7 +100,7 @@ Association:
  * check: error on duplicate MethodDeclaration
  */
 MethodDeclaration:
-	('<'typeParameter=TypeParameter'>')? parameterizedType=ParameterizedType? name=ID '(' (parameter=Parameter)? ')';
+	typeParameter=TypeParameter? (VOID?='void'? | parameterizedType=ParameterizedType) name=ID '(' (parameter=Parameter)? ')';
 
 	/**
  * check: error on usage of keyword as name
@@ -121,7 +121,7 @@ Reference:
 	FINAL?='final'? NOTNULL?='notnull'? parameterizedType=ParameterizedType name=ID;
 
 TypePrefix:
-	andPrefix=AndPrefix ('||' typePrefix=TypePrefix)?;
+	=>andPrefix=AndPrefix ('||' typePrefix=TypePrefix)?;
 
 AndPrefix:
 	notPrefix=NotPrefix ('&&' andPrefix=AndPrefix)?;
