@@ -10,14 +10,17 @@ Element:
 	allImport+=Import*
 	allType+=Type+;
 
+Endln:
+	';'*;
+
 Package:
-	'package' name=QualifiedName ';';
+	'package' name=QualifiedName Endln;
 
 	/**
  * check: warning on duplicate
  */
 Import:
-	'import' importedNamespace=QualifiedNameWithWildCard ';';
+	'import' importedNamespace=QualifiedNameWithWildCard Endln;
 
 QualifiedNameWithWildCard:
 	QualifiedName '.*'?;
@@ -40,12 +43,12 @@ TypeParameter:
 
 ParameterizedType:
 	(type=[Type|QualifiedName] (=>'<'wildcard=Wildcard'>')?)
-	| (=>typeParam=[TypeParameter]);
+		| (=>typeParam=[TypeParameter]);
 
 Wildcard:
 	UNBOUND?='?' 
-	| (('?' (UPPERBOUND?='extends' | LOWERBOUND?='super'))? parameterizedType=ParameterizedType);
-		
+		| (('?' (UPPERBOUND?='extends' | LOWERBOUND?='super'))? parameterizedType=ParameterizedType);
+
 	/**
  * check: error on usage of keyword as name
  * check: error on duplicate
@@ -56,7 +59,7 @@ Wildcard:
  */
 Contract:
 	visibility=Visibility? 'interface' name=ID typeParameter=TypeParameter? (EXTENDS?='extends' parameterizedType=ParameterizedType)? '{'
-		(allMethodDeclaration+=MethodDeclaration ';')*
+		(allMethodDeclaration+=MethodDeclaration Endln)*
 	'}';
 
 	/**
@@ -72,9 +75,7 @@ Entity:
 		'class' name=ID typeParameter=TypeParameter? (EXTENDS?='extends' parameterizedType=ParameterizedType)? 
 			(IMPLEMENTS?='implements' allParameterizedType+=ParameterizedType (',' allParameterizedType+=ParameterizedType)*)? '{'
 		
-		(=>allAssociation+=Association
-			| allMethodDefinition+=MethodDefinition  
-			| allState+=State)*
+		(=> allAssociation+=Association | allMethodDefinition+=MethodDefinition | allState+=State)*
 	'}';
 
 	/**
@@ -83,7 +84,7 @@ Entity:
  * check: error on cyclic reference to self
  */
 State:
-	'state' name=ID constraint=Constraint? ';';
+	'state' name=ID constraint=Constraint? Endln;
 
 	/**
  * check: error on usage of keyword as name
@@ -92,7 +93,7 @@ State:
  */
 Association:
 	visibility=Visibility? IDENTITY?='identity'? qualifiedReference=QualifiedReference 
-		(constraint=Constraint | (INITIALIZED?='=' expression=Expression))? ';';
+		(constraint=Constraint | (INITIALIZED?='=' expression=Expression))? Endln;
 
 	/**
  * check: error on usage of keyword as name
@@ -136,7 +137,7 @@ NotPrefix:
  */
 MethodDefinition:
 	visibility=Visibility? (ABSTRACT?='abstract' | FINAL?='final')?
-		methodDeclaration=MethodDeclaration ((constraint=Constraint? methodBody=MethodBody) | UNDEFINED?=';');
+		methodDeclaration=MethodDeclaration ((constraint=Constraint? methodBody=MethodBody) | UNDEFINED?=Endln);
 
 Constraint:
 	'onlyif' condition=Condition;
@@ -182,10 +183,7 @@ Statement:
 	blockStatement=BlockStatement | lineStatement=LineStatement;
 
 BlockStatement:
-	ifBlock=If
-	| whileBlock=While
-	| forBlock=For
-	| guardBlock=Guard;
+	ifBlock=If | whileBlock=While | forBlock=For | guardBlock=Guard;
 
 If:
 	'if' '(' condition=Condition ')' methodBody=MethodBody elseBlock=Else?;
@@ -212,11 +210,14 @@ Guard:
  * scope: let expression not allowed outside of containing LineStatement
  */
 LineStatement:
-	(localVariableDeclaration=LocalVariableDeclaration | instruction=Instruction) ';';
+	(localVariableDeclaration=LocalVariableDeclaration | assignment=Assignment  | instruction=Instruction) Endln;
 
 LocalVariableDeclaration:
 	=>qualifiedReference=QualifiedReference '=' expression=Expression;
 
+Assignment:
+	=>instance=Instance ('=' expression=Expression)?;
+	
 	/**
  * check: error on usage of passive Instance in isolation
  * check: error on usage of MOVE when rExpression is not a value
@@ -224,7 +225,7 @@ LocalVariableDeclaration:
  */
 Instruction:
 	(BREAK?='break' | CONTINUE?='continue')
-		| (((RETURN?='return' | PRINT?='print') | (=> reference=[Reference|QualifiedName] '='))? expression=Expression) ;
+		| ((RETURN?='return' | PRINT?='print')? expression=Expression) ;
 
 	/**
  * check: error on usage of ASTERIX if LHS is not numeric
@@ -261,7 +262,8 @@ Instance:
  * scope: MethodCall must belong to the LHS of DOT
  */
 MethodCall:
-	(reference=[Reference] | (=> methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')')) ('.' methodCall=MethodCall)?;
+	(reference=[Reference] | (=> methodDeclaration=[MethodDeclaration|QualifiedName] => '(' argument=Argument? ')')) 
+		('.' methodCall=MethodCall)?;
 
 Argument:
 	expression=Expression (list?=',' next=Argument)?;
@@ -277,11 +279,10 @@ ListInstance:
 
 Select:
 	'select' (DISTINCT?='distinct')? reference=Reference 
-		'from' (listReference=[Reference] | listInstance=ListInstance) 
-			(CLAUSE?='where' condition=Condition)?;
+		'from' (listReference=[Reference] | listInstance=ListInstance) (CLAUSE?='where' condition=Condition)?;
 
 NewInstance:
 	'new' entity=[Entity|QualifiedName] '(' argument=Argument? ')' (=> '{' allNestedInstance+=NestedInstance+ '}')?;
 
 NestedInstance:
-	qualifiedReference=[QualifiedReference|QualifiedName] '=' expression=Expression ';';
+	qualifiedReference=[QualifiedReference|QualifiedName] '=' expression=Expression Endln;

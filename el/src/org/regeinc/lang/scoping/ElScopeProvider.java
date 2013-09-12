@@ -69,6 +69,10 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 				if(reference.getParameterizedType().getType()!=null){
 					allMethodDeclaration.addAll(Finder.allMethodDeclaration(reference.getParameterizedType().getType()));
 				}
+			}else if(instance.getLiteral()!=null){
+				if(instance.getLiteral().getTHIS()!=null){
+					allMethodDeclaration.addAll(Finder.allMethodDeclaration(Finder.entity(instance)));
+				}
 			}
 		}
 		IScope iscope = Scopes.scopeFor(allMethodDeclaration);
@@ -85,6 +89,13 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 				allReference.addAll(Finder.allLocalVariable(type));
 				allReference.addAll(Finder.allParameter(type));
 				allReference.addAll(Finder.allAssociation(type, null));
+			}else if(instance.getLiteral()!=null){
+				if(instance.getLiteral().getTHIS()!=null){
+					Entity type = Finder.entity(instance);
+					allReference.addAll(Finder.allLocalVariable(type));
+					allReference.addAll(Finder.allParameter(type));
+					allReference.addAll(Finder.allAssociation(type, null));
+				}
 			}
 		}
 		IScope iscope = Scopes.scopeFor(allReference);
@@ -109,20 +120,22 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 		allReference.addAll(Finder.allAssociation(entity,null));
 		EObject scopeContext = context;
 		while(!(scopeContext instanceof Model)){			
-			if(scopeContext instanceof MethodDefinition){
+			if(scopeContext instanceof Select){
+				allReference.add(Finder.selectVariable(scopeContext));
+			}else if(scopeContext instanceof For){
+				allReference.add(Finder.forVariable(scopeContext));
+			}else { // if(scopeContext instanceof MethodDefinition)
 				MethodDefinition definition = Finder.methodDefinition(context);
 				allReference.addAll(Finder.allParameter(definition));
 				allReference.addAll(Finder.allLocalVariable(definition));
-			}else if(scopeContext instanceof For){
-				allReference.add(Finder.forVariable(scopeContext));
-			}else if(scopeContext instanceof Select){
-				allReference.add(Finder.selectVariable(scopeContext));
 			}
 			scopeContext = scopeContext.eContainer();
 		}		
 		IScope iscope = Scopes.scopeFor(allReference);
 		return iscope;
 	}
+	
+	
 	
 	IScope scope_ParameterizedType_typeParameter(EObject context, EReference eReference){
 		List<TypeParameter> allTypeParameter = new ArrayList<TypeParameter>();

@@ -3,6 +3,7 @@ package org.regeinc.lang.generator
 import org.regeinc.lang.el.Instruction
 import org.regeinc.lang.el.LineStatement
 import org.regeinc.lang.el.LocalVariableDeclaration
+import org.regeinc.lang.el.Assignment
 
 class LineStatementJ {
 	private new(){		
@@ -16,6 +17,7 @@ class LineStatementJ {
 	
 	def compile(LineStatement lineStatement)'''
 		«IF lineStatement.localVariableDeclaration!=null»«compile(lineStatement.localVariableDeclaration)»«
+		ELSEIF lineStatement.assignment!=null»«compile(lineStatement.assignment)»«
 		ELSE»«compile(lineStatement.instruction)»«ENDIF»'''
 
 	def compile(LocalVariableDeclaration localVariableDeclaration)'''
@@ -38,5 +40,9 @@ class LineStatementJ {
 		ELSEIF instruction.CONTINUE»continue«
 		ELSEIF instruction.RETURN» return «ExpressionJ::instance.compile(instruction.expression)»«
 		ELSEIF instruction.PRINT» System.out.println(«ExpressionJ::instance.compile(instruction.expression)»)«
-		ELSE»«instruction.reference.name» = «ExpressionJ::instance.compile(instruction.expression)»«ENDIF»;'''
+		ELSE» = «ExpressionJ::instance.compile(instruction.expression)»«ENDIF»;'''
+		
+	def compile(Assignment assignment)'''
+		«ExpressionJ::instance.compile(assignment.instance)»«
+		IF assignment.expression!=null» = «ExpressionJ::instance.compile(assignment.expression)»«ENDIF»'''	
 }
