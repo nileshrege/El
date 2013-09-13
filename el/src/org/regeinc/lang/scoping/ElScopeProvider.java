@@ -49,6 +49,9 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 								if(instance.getReference()!=null && instance.getReference().getParameterizedType().getType()!=null){
 									allStates.addAll(Finder.allState(instance.getReference().getParameterizedType().getType(), null));
 								}
+								if(instance.getLiteral()!=null && instance.getLiteral().getTHIS()!=null){
+									allStates.addAll(Finder.allState(Finder.entity(instance),null));
+								}
 							}
 						}
 					}
