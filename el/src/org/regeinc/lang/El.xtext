@@ -216,7 +216,7 @@ LocalVariableDeclaration:
 	=>qualifiedReference=QualifiedReference '=' expression=Expression;
 
 Assignment:
-	=>instance=Instance ('=' expression=Expression)?;
+	=>(THIS?='this''.')?reference=[Reference] '=' expression=Expression;
 	
 	/**
  * check: error on usage of passive Instance in isolation

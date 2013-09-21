@@ -43,6 +43,5 @@ class LineStatementJ {
 		ELSE» = «ExpressionJ::instance.compile(instruction.expression)»«ENDIF»;'''
 		
 	def compile(Assignment assignment)'''
-		«ExpressionJ::instance.compile(assignment.instance)»«
-		IF assignment.expression!=null» = «ExpressionJ::instance.compile(assignment.expression)»«ENDIF»'''	
+		«IF assignment.THIS»this.«ENDIF»«assignment.reference.name» = «ExpressionJ::instance.compile(assignment.expression)»;'''
 }
