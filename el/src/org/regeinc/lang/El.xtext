@@ -75,7 +75,7 @@ Entity:
 		'class' name=ID typeParameter=TypeParameter? (EXTENDS?='extends' parameterizedType=ParameterizedType)? 
 			(IMPLEMENTS?='implements' allParameterizedType+=ParameterizedType (',' allParameterizedType+=ParameterizedType)*)? '{'
 		
-		(=> allAssociation+=Association | allMethodDefinition+=MethodDefinition | allState+=State)*
+		(=> allAssociation+=Association | allMethodDefinition+=MethodDefinition | allState+=State | allActivity+=Activity)*
 	'}';
 
 	/**
@@ -173,7 +173,7 @@ enum Comparator:
 
 MethodBody:
 	{MethodBody}'{'
-		allStatement+=Statement*
+		=>allStatement+=Statement*
 	'}';
 
 	/**
@@ -286,3 +286,21 @@ NewInstance:
 
 NestedInstance:
 	qualifiedReference=[QualifiedReference|QualifiedName] '=' expression=Expression Endln;
+
+Activity:
+	'activity' (VOID?='void'? | parameterizedType=ParameterizedType) name=ID '(' (parameter=Parameter)? ')' '{'
+		activityFlow=ActivityFlow
+		allActivityBranch+=ActivityBranch*
+	'}';
+
+ActivityFlow:
+	ActivityCall Endln;
+
+ActivityCall:
+	activity=[Activity] ('(' activityResult=ActivityResult ')')? ('->'(activityCall=ActivityCall | 'return'))?;
+
+ActivityBranch:
+	activityResult=ActivityResult ':' expression=Expression '->' activityFlow=ActivityFlow;
+
+ActivityResult:
+	'*' activity=[Activity];
