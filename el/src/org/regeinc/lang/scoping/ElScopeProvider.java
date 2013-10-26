@@ -127,7 +127,7 @@ public class ElScopeProvider extends AbstractDeclarativeScopeProvider {
 				allReference.add(Finder.selectVariable(scopeContext));
 			}else if(scopeContext instanceof For){
 				allReference.add(Finder.forVariable(scopeContext));
-			}else { // if(scopeContext instanceof MethodDefinition)
+			}else if(scopeContext instanceof MethodDefinition){
 				MethodDefinition definition = Finder.methodDefinition(context);
 				allReference.addAll(Finder.allParameter(definition));
 				allReference.addAll(Finder.allLocalVariable(definition));

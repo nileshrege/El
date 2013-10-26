@@ -275,7 +275,7 @@ DECIMAL_LITERAL:
 	integer=INT ((=> PERIOD?='.' fraction=INT (FLOATING?=('f' | 'F'))?) | TOOLONG?=('l' | 'L'))?;
 
 ListInstance:
-	{ListInstance} ('[' ( select=Select | argument=Argument)? ']');
+	{ListInstance} ('[' ( argument=Argument | select=Select )? ']');
 
 Select:
 	'select' (DISTINCT?='distinct')? reference=Reference 

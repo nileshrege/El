@@ -21,6 +21,7 @@ import org.regeinc.lang.el.Select;
 import org.regeinc.lang.el.State;
 import org.regeinc.lang.el.Statement;
 import org.regeinc.lang.el.Type;
+import org.regeinc.lang.el.impl.LineStatementImpl;
 
 interface Criteria {
 	boolean isSatisfiedBy(EObject context);
@@ -233,8 +234,8 @@ public class Finder {
 			MethodDefinition methodDefinition = (MethodDefinition) eObject;
 			if(methodDefinition.getMethodBody()!=null && methodDefinition.getMethodBody().getAllStatement()!=null){
 				for(Statement stmt : methodDefinition.getMethodBody().getAllStatement()){
-					if(stmt instanceof LineStatement){
-						LineStatement lineStatement = (LineStatement) stmt;
+					if(stmt.getLineStatement()!=null){
+						LineStatement lineStatement = stmt.getLineStatement();
 						if (lineStatement.getLocalVariableDeclaration()!= null) {
 							allTypeRef.add(lineStatement.getLocalVariableDeclaration().getQualifiedReference().getReference());
 						}						
